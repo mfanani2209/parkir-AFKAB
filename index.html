@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parkir AFKAB - Firebase & Vercel Version</title>
+  <title>Parkir AFKAB - Dark Mode Edition</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,44 +14,64 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #EBF1F5; }
-    .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03); }
-    .card-border { border: 1px solid #E2E8F0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
   </style>
 </head>
-<body class="text-slate-700 min-h-screen pb-12">
+<body class="bg-slate-950 text-slate-100 min-h-screen pb-12 selection:bg-teal-500 selection:text-white">
 
   <!-- OVERLAY LOADING GLOBAL -->
-  <div id="global-loading" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex-col items-center justify-center transition-all">
-    <div class="bg-white p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 border border-slate-100">
-      <div class="w-10 h-10 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin"></div>
-      <p id="loading-text" class="text-xs font-bold text-slate-700">Memproses data Firebase...</p>
+  <div id="global-loading" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 hidden flex-col items-center justify-center transition-all">
+    <div class="bg-slate-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 border border-slate-800">
+      <div class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></div>
+      <p id="loading-text" class="text-xs font-bold text-slate-200">Memproses data Firebase...</p>
+    </div>
+  </div>
+
+  <!-- NOTIFIKASI FLOATING SUKSES -->
+  <div id="success-toast" class="fixed top-5 right-5 z-50 transform translate-y-[-200%] opacity-0 transition-all duration-300 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-3 border border-emerald-500">
+    <i class="fa-solid fa-circle-check text-xl"></i>
+    <div>
+      <h4 class="font-bold text-xs uppercase tracking-wider">Berhasil!</h4>
+      <p id="toast-message" class="text-xs text-emerald-100">Data parkir berhasil disimpan ke Firebase.</p>
     </div>
   </div>
 
   <!-- HEADER UTAMA -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
     <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
       <div class="flex items-center space-x-3.5">
-        <div class="w-10 h-10 rounded-xl bg-[#0EA5E9] text-white flex items-center justify-center font-extrabold text-xl shadow-xs">
+        <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-teal-600/20">
           P
         </div>
         <div>
-          <h1 class="font-extrabold text-slate-800 text-base leading-tight tracking-tight">Parkir AFKAB</h1>
-          <p class="text-xs text-slate-400 font-medium">Firebase & Vercel Edition</p>
+          <h1 class="font-extrabold text-slate-100 text-base leading-tight tracking-tight">Parkir AFKAB</h1>
+          <p class="text-xs text-slate-400 font-medium">Dark Mode & Firebase Edition</p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <!-- FITUR EXPORT & IMPORT EXCEL -->
-        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-xs">
+      <div class="flex items-center space-x-3">
+        <!-- OPSI TANGGAL (MINGGUAN) -->
+        <div class="relative">
+          <select id="sheet-tab-select" onchange="changeActiveDate(this.value)" class="appearance-none bg-slate-800 border border-slate-700 text-teal-400 font-bold text-xs rounded-xl px-4 py-2.5 pr-9 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+            <option value="TGL 25-10-2026">📅 Minggu, 25 Okt 2026</option>
+            <option value="TGL 01-11-2026">📅 Minggu, 01 Nov 2026</option>
+            <option value="TGL 08-11-2026">📅 Minggu, 08 Nov 2026</option>
+            <option value="TGL 15-11-2026">📅 Minggu, 15 Nov 2026</option>
+            <option value="TGL 22-11-2026">📅 Minggu, 22 Nov 2026</option>
+            <option value="TGL 29-11-2026">📅 Minggu, 29 Nov 2026</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-[10px] text-slate-400 pointer-events-none"></i>
+        </div>
+
+        <!-- EXPORT / IMPORT -->
+        <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm">
           <i class="fa-solid fa-file-excel"></i>
-          <span>Export Excel</span>
+          <span class="hidden sm:inline">Export</span>
         </button>
 
-        <label class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-xs cursor-pointer">
+        <label class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm cursor-pointer">
           <i class="fa-solid fa-file-import"></i>
-          <span>Import Excel</span>
+          <span class="hidden sm:inline">Import</span>
           <input type="file" id="import-excel-file" accept=".xlsx, .xls" onchange="importFromExcel(event)" class="hidden">
         </label>
       </div>
@@ -65,27 +85,26 @@
     <div class="lg:col-span-4 space-y-6">
 
       <!-- CARD 1: VERIFIKASI KELUAR -->
-      <div class="bg-white rounded-2xl p-5 card-border card-shadow">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-bold text-slate-800 text-xs tracking-wider uppercase flex items-center gap-2">
-            <i class="fa-solid fa-magnifying-glass text-teal-600"></i>
+          <h2 class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
+            <i class="fa-solid fa-magnifying-glass text-teal-400"></i>
             VERIFIKASI KELUAR
           </h2>
-          <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">Fast Search</span>
+          <span class="text-[10px] font-extrabold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full">Fast Search</span>
         </div>
 
         <div class="space-y-3">
-          <label class="block text-xs font-semibold text-slate-600">Masukkan Nomor Parkir:</label>
+          <label class="block text-xs font-semibold text-slate-400">Masukkan Nomor Parkir:</label>
           <div class="relative flex items-center">
-            <input type="number" id="verify-id-input" oninput="handleVerificationSearch()" placeholder="Ketik angka tiket..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
-            <button onclick="resetVerification()" class="absolute right-2 text-xs font-bold text-slate-600 bg-slate-200/80 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
+            <input type="number" id="verify-id-input" oninput="handleVerificationSearch()" placeholder="Ketik angka tiket..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
+            <button onclick="resetVerification()" class="absolute right-2 text-xs font-bold text-slate-400 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition">
               Reset
             </button>
           </div>
 
-          <!-- CONTAINER HASIL VERIFIKASI -->
-          <div id="verification-result-box" class="mt-4 bg-slate-50/60 border border-slate-200/80 rounded-2xl p-5 min-h-[200px] flex items-center justify-center">
-            <div class="text-center text-slate-400 space-y-2">
+          <div id="verification-result-box" class="mt-4 bg-slate-950/60 border border-slate-800 rounded-2xl p-5 min-h-[200px] flex items-center justify-center">
+            <div class="text-center text-slate-600 space-y-2">
               <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
               <p class="text-xs font-medium">Ketik nomor parkir untuk memeriksa data kendaraan.</p>
             </div>
@@ -94,26 +113,26 @@
       </div>
 
       <!-- CARD 2: INPUT PARKIR MASUK -->
-      <div class="bg-white rounded-2xl p-5 card-border card-shadow">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-bold text-slate-800 text-xs tracking-wider uppercase flex items-center gap-2">
-            <i class="fa-solid fa-circle-plus text-teal-600"></i>
+          <h2 class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
+            <i class="fa-solid fa-circle-plus text-teal-400"></i>
             INPUT PARKIR MASUK
           </h2>
-          <span id="badge-next-id" class="text-xs font-extrabold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
-            No. Parkir Auto
+          <span id="badge-next-id" class="text-xs font-extrabold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-1 rounded-lg">
+            No. Tiket Auto
           </span>
         </div>
 
         <form id="form-parking" onsubmit="submitParkingEntry(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Nomor Tiket / Parkir (Bebas diisi)</label>
-            <input type="number" id="form-id" required placeholder="Contoh: 1, 2, 10..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Nomor Tiket / Parkir</label>
+            <input type="number" id="form-id" required placeholder="Contoh: 1, 2, 10..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500">
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Jenis Kendaraan</label>
-            <select id="form-type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Jenis Kendaraan</label>
+            <select id="form-type" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500">
               <option value="Sepedah">Sepedah (Rp 5.000)</option>
               <option value="Mobil">Mobil (Rp 10.000)</option>
               <option value="Tamu">Tamu (Rp 0)</option>
@@ -121,26 +140,26 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Plat Nomor</label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Plat Nomor (Otomatis Kosong)</label>
             <div class="grid grid-cols-3 gap-2">
-              <input type="text" id="form-plate-front" value="AG" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-sm text-center font-bold text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
-              <input type="text" id="form-plate-num" placeholder="1111" required class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-sm text-center font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
-              <input type="text" id="form-plate-back" placeholder="QD" class="bg-slate-50 border border-slate-200 rounded-xl px-2 py-2 text-sm text-center font-bold text-slate-800 uppercase focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <input type="text" id="form-plate-front" value="AG" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500">
+              <input type="text" id="form-plate-num" placeholder="XXXX" required class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
+              <input type="text" id="form-plate-back" placeholder="YY" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Orang</label>
-              <input type="number" id="form-person" min="1" value="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-center font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Jumlah Orang</label>
+              <input type="number" id="form-person" min="1" value="" placeholder="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Helm</label>
-              <input type="number" id="form-helmet" min="0" value="1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-center font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Jumlah Helm</label>
+              <input type="number" id="form-helmet" min="0" value="" placeholder="0" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
             </div>
           </div>
 
-          <button type="submit" id="btn-submit" class="w-full bg-[#0D9488] hover:bg-teal-700 text-white font-bold py-3 rounded-xl shadow-xs text-sm transition">
+          <button type="submit" id="btn-submit" class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-600/30 text-sm transition">
             Simpan ke Firebase
           </button>
         </form>
@@ -148,83 +167,83 @@
 
     </div>
 
-    <!-- KOLOM KANAN (DASHBOARD RINGKASAN & TABEL) -->
+    <!-- KOLOM KANAN (DASHBOARD & TABEL) -->
     <div class="lg:col-span-8 space-y-6">
 
       <!-- CARD RINGKASAN TOTAL -->
-      <div class="bg-white rounded-2xl p-5 card-border card-shadow">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-bold text-slate-800 text-xs tracking-wider uppercase flex items-center gap-2">
-            <i class="fa-solid fa-chart-line text-teal-600"></i>
+          <h2 class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-teal-400"></i>
             RINGKASAN REAL-TIME
           </h2>
-          <span class="text-xs font-bold text-emerald-600 flex items-center gap-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Live Firebase
+          <span id="active-date-badge" class="text-xs font-bold text-teal-400 bg-teal-950/80 border border-teal-800 px-3 py-1 rounded-xl">
+            Minggu, 25 Okt 2026
           </span>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div class="sm:col-span-4 bg-[#1E293B] text-white rounded-2xl p-4 flex flex-col justify-between shadow-xs">
+          <div class="sm:col-span-4 bg-slate-950 border border-slate-800 text-white rounded-2xl p-4 flex flex-col justify-between">
             <div>
               <p class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">TOTAL PENDAPATAN</p>
-              <p id="stat-total-revenue" class="text-2xl font-black text-[#10B981] mt-1">Rp 0</p>
+              <p id="stat-total-revenue" class="text-2xl font-black text-emerald-400 mt-1">Rp 0</p>
             </div>
-            <div class="pt-3 border-t border-slate-700/80 flex items-center justify-between text-xs text-slate-300">
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
               <span>Total Tiket:</span>
-              <span id="stat-total-tickets" class="font-bold">0</span>
+              <span id="stat-total-tickets" class="font-bold text-slate-200">0</span>
             </div>
           </div>
 
           <div class="sm:col-span-8 grid grid-cols-3 gap-2.5">
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 text-center flex flex-col justify-center">
-              <i class="fa-solid fa-motorcycle text-indigo-500 text-lg mb-1"></i>
-              <p class="text-[10px] font-medium text-slate-500">Sepedah</p>
-              <p id="stat-sepedah-count" class="text-lg font-bold text-slate-800">0</p>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center">
+              <i class="fa-solid fa-motorcycle text-indigo-400 text-lg mb-1"></i>
+              <p class="text-[10px] font-medium text-slate-400">Sepedah</p>
+              <p id="stat-sepedah-count" class="text-lg font-bold text-slate-200">0</p>
             </div>
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 text-center flex flex-col justify-center">
-              <i class="fa-solid fa-car text-blue-500 text-lg mb-1"></i>
-              <p class="text-[10px] font-medium text-slate-500">Mobil</p>
-              <p id="stat-mobil-count" class="text-lg font-bold text-slate-800">0</p>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center">
+              <i class="fa-solid fa-car text-blue-400 text-lg mb-1"></i>
+              <p class="text-[10px] font-medium text-slate-400">Mobil</p>
+              <p id="stat-mobil-count" class="text-lg font-bold text-slate-200">0</p>
             </div>
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-3 text-center flex flex-col justify-center">
-              <i class="fa-solid fa-user-shield text-amber-500 text-lg mb-1"></i>
-              <p class="text-[10px] font-medium text-slate-500">Tamu</p>
-              <p id="stat-tamu-count" class="text-lg font-bold text-slate-800">0</p>
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center">
+              <i class="fa-solid fa-user-shield text-amber-400 text-lg mb-1"></i>
+              <p class="text-[10px] font-medium text-slate-400">Tamu</p>
+              <p id="stat-tamu-count" class="text-lg font-bold text-slate-200">0</p>
             </div>
           </div>
         </div>
 
         <div class="grid grid-cols-3 gap-3 mt-3">
-          <div class="bg-amber-50/60 border border-amber-200/60 rounded-xl p-2.5 text-center">
-            <p class="text-[9px] font-extrabold text-amber-700 uppercase tracking-wider">MASIH PARKIR</p>
-            <p id="stat-masih-parkir" class="text-base font-black text-amber-800 mt-0.5">0</p>
+          <div class="bg-amber-950/40 border border-amber-900/50 rounded-xl p-2.5 text-center">
+            <p class="text-[9px] font-extrabold text-amber-400 uppercase tracking-wider">MASIH PARKIR</p>
+            <p id="stat-masih-parkir" class="text-base font-black text-amber-300 mt-0.5">0</p>
           </div>
-          <div class="bg-emerald-50/60 border border-emerald-200/60 rounded-xl p-2.5 text-center">
-            <p class="text-[9px] font-extrabold text-emerald-700 uppercase tracking-wider">KELUAR (SESUAI)</p>
-            <p id="stat-keluar-sesuai" class="text-base font-black text-emerald-800 mt-0.5">0</p>
+          <div class="bg-emerald-950/40 border border-emerald-900/50 rounded-xl p-2.5 text-center">
+            <p class="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider">KELUAR (SESUAI)</p>
+            <p id="stat-keluar-sesuai" class="text-base font-black text-emerald-300 mt-0.5">0</p>
           </div>
-          <div class="bg-rose-50/60 border border-rose-200/60 rounded-xl p-2.5 text-center">
-            <p class="text-[9px] font-extrabold text-rose-700 uppercase tracking-wider">TIDAK SESUAI</p>
-            <p id="stat-tidak-sesuai" class="text-base font-black text-rose-800 mt-0.5">0</p>
+          <div class="bg-rose-950/40 border border-rose-900/50 rounded-xl p-2.5 text-center">
+            <p class="text-[9px] font-extrabold text-rose-400 uppercase tracking-wider">TIDAK SESUAI</p>
+            <p id="stat-tidak-sesuai" class="text-base font-black text-rose-300 mt-0.5">0</p>
           </div>
         </div>
       </div>
 
       <!-- CARD TABEL DATA -->
-      <div class="bg-white rounded-2xl p-5 card-border card-shadow">
+      <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-          <h2 class="font-bold text-slate-800 text-xs tracking-wider uppercase flex items-center gap-2">
-            <i class="fa-solid fa-table-list text-teal-600"></i>
+          <h2 class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
+            <i class="fa-solid fa-table-list text-teal-400"></i>
             DATA PARKIR FIRESTORE
           </h2>
 
           <div class="flex items-center space-x-2 w-full sm:w-auto">
             <div class="relative flex-1 sm:w-48">
-              <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Filter No. Parkir..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-sky-500">
-              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-400"></i>
+              <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Filter No. Parkir..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
+              <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-500"></i>
             </div>
 
-            <select id="filter-status" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 text-slate-700 font-semibold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <select id="filter-status" onchange="applyFilters()" class="bg-slate-950 border border-slate-800 text-slate-300 font-semibold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500">
               <option value="ALL">Semua Status</option>
               <option value="NONE">Di Parkiran</option>
               <option value="SESUAI">Keluar (Sesuai)</option>
@@ -236,7 +255,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs border-collapse">
             <thead>
-              <tr class="border-b border-slate-200/80 text-slate-400 font-bold uppercase tracking-wider">
+              <tr class="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider">
                 <th class="py-3 px-2">NO</th>
                 <th class="py-3 px-2">KENDARAAN</th>
                 <th class="py-3 px-2">PLAT NOMOR</th>
@@ -247,8 +266,8 @@
                 <th class="py-3 px-2 text-center">AKSI</th>
               </tr>
             </thead>
-            <tbody id="table-body-container" class="divide-y divide-slate-100">
-              <!-- Data dimuat oleh Firebase -->
+            <tbody id="table-body-container" class="divide-y divide-slate-800/60">
+              <!-- Data dimuat real-time -->
             </tbody>
           </table>
         </div>
@@ -263,90 +282,106 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // =========================================================================
-    // PASTE FIREBASE CONFIG ANDA DI SINI
-    // =========================================================================
-     const firebaseConfig = {
-    apiKey: "AIzaSyCIS9fXM7g5kTBRzBCbPHTXinzmvHO2C8U",
-    authDomain: "parkir-afkab.firebaseapp.com",
-    projectId: "parkir-afkab",
-    storageBucket: "parkir-afkab.firebasestorage.app",
-    messagingSenderId: "928150761756",
-    appId: "1:928150761756:web:6f04316a1fb7bbb5d74ad9",
-    measurementId: "G-7706128ZGR"
-  };
+    // KONFIGURASI FIREBASE ANDA
+    const firebaseConfig = {
+      apiKey: "AIzaSyCIS9fXM7g5kTBRzBCbPHTXinzmvHO2C8U",
+      authDomain: "parkir-afkab.firebaseapp.com",
+      projectId: "parkir-afkab",
+      storageBucket: "parkir-afkab.firebasestorage.app",
+      messagingSenderId: "928150761756",
+      appId: "1:928150761756:web:6f04316a1fb7bbb5d74ad9",
+      measurementId: "G-7706128ZGR"
+    };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const parkingCol = collection(db, "parkir_data");
 
-    window.db = db;
-    window.parkingCol = parkingCol;
-    window.setDoc = setDoc;
-    window.doc = doc;
-    window.updateDoc = updateDoc;
-
+    let currentSelectedDate = "TGL 25-10-2026";
     let parkingData = [];
+    let unsubscribeSnapshot = null;
 
-    // AUDIO NOTIFIKASI SUARA (Web Audio API Synthesizer - Bebas file eksternal)
+    // AUDIO NOTIFIKASI SUARA (Web Audio API)
     function playAudioNotif(type) {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
 
-      if (type === "SUCCESS") {
-        // Nada Beep Sukses Input
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.3);
-      } else if (type === "VERIFY") {
-        // Nada Keluar Sesuai
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
-        gain.gain.setValueAtTime(0.25, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.4);
-      } else if (type === "WARNING") {
-        // Nada Warning / Tidak Sesuai
-        osc.type = "sawtooth";
-        osc.frequency.setValueAtTime(300, ctx.currentTime);
-        osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-        osc.start(ctx.currentTime);
-        osc.stop(ctx.currentTime + 0.35);
+        if (type === "SUCCESS") {
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+          osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.2, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === "VERIFY") {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.4);
+        } else if (type === "WARNING") {
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(300, ctx.currentTime);
+          osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch (e) {
+        console.log("Audio not supported or blocked by browser");
       }
     }
 
-    // REAL-TIME LISTENER DATABASE
-    onSnapshot(parkingCol, (snapshot) => {
-      parkingData = [];
-      snapshot.forEach(docSnap => {
-        parkingData.push(docSnap.data());
+    // SHOW TOAST NOTIFICATION
+    function showToast(message) {
+      const toast = document.getElementById("success-toast");
+      document.getElementById("toast-message").textContent = message;
+      toast.classList.remove("translate-y-[-200%]", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-[-200%]", "opacity-0");
+      }, 3500);
+    }
+
+    // CONNECT LISTENER BERDASARKAN TANGGAL AKTIF
+    window.changeActiveDate = function(dateKey) {
+      currentSelectedDate = dateKey;
+      const selectEl = document.getElementById("sheet-tab-select");
+      document.getElementById("active-date-badge").textContent = selectEl.options[selectEl.selectedIndex].text.replace("📅 ", "");
+      setupRealtimeListener();
+    };
+
+    function setupRealtimeListener() {
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      const colRef = collection(db, currentSelectedDate);
+      unsubscribeSnapshot = onSnapshot(colRef, (snapshot) => {
+        parkingData = [];
+        snapshot.forEach(docSnap => {
+          parkingData.push(docSnap.data());
+        });
+
+        parkingData.sort((a, b) => Number(a.id) - Number(b.id));
+        updateNextTicketId();
+        applyFilters();
+        updateDashboardStats();
+      }, (error) => {
+        console.error("Firebase error:", error);
       });
+    }
 
-      parkingData.sort((a, b) => Number(a.id) - Number(b.id));
-      window.parkingData = parkingData;
-
-      updateNextTicketId();
-      applyFilters();
-      updateDashboardStats();
-    });
-
-    // AMBIL TIKET BERIKUTNYA
     function updateNextTicketId() {
       const maxId = parkingData.reduce((max, item) => Number(item.id) > max ? Number(item.id) : max, 0);
       document.getElementById("form-id").value = maxId + 1;
     }
 
-    // DASHBOARD STATS
     function updateDashboardStats() {
       const totalTickets = parkingData.length;
       const sepedahCount = parkingData.filter(i => i.type === "Sepedah").length;
@@ -371,7 +406,7 @@
       document.getElementById("stat-total-revenue").textContent = "Rp " + grandTotal.toLocaleString("id-ID");
     }
 
-    // SIMPAN PARKIR BARU
+    // SIMPAN DATA PARKIR (FORM OTOMATIS KOSONG SETELAH INPUT)
     window.submitParkingEntry = async function(e) {
       e.preventDefault();
       const idVal = Number(document.getElementById("form-id").value);
@@ -379,8 +414,8 @@
       const pFront = document.getElementById("form-plate-front").value.toUpperCase();
       const pNum = document.getElementById("form-plate-num").value;
       const pBack = document.getElementById("form-plate-back").value.toUpperCase();
-      const personVal = Number(document.getElementById("form-person").value);
-      const helmetVal = Number(document.getElementById("form-helmet").value);
+      const personVal = Number(document.getElementById("form-person").value) || 0;
+      const helmetVal = Number(document.getElementById("form-helmet").value) || 0;
 
       let costVal = 0;
       if (typeVal === "Sepedah") costVal = 5000;
@@ -400,9 +435,16 @@
       };
 
       try {
-        await setDoc(doc(db, "parkir_data", String(idVal)), entry);
-        playAudioNotif("SUCCESS"); // 🔊 SUARA BEEP SUKSES
+        await setDoc(doc(db, currentSelectedDate, String(idVal)), entry);
+        playAudioNotif("SUCCESS"); // 🔊 Suara Berhasil
+        showToast(`Tiket #${idVal} berhasil disimpan!`); // 🔔 Notifikasi Sukses
+
+        // KOSONGKAN FORM INPUT KECUALI PREFIX PLAT 'AG' DAN AUTO INCREMENT ID
         document.getElementById("form-plate-num").value = "";
+        document.getElementById("form-plate-back").value = "";
+        document.getElementById("form-person").value = "";
+        document.getElementById("form-helmet").value = "";
+        updateNextTicketId();
       } catch (err) {
         alert("Gagal simpan ke Firebase: " + err.message);
       }
@@ -411,10 +453,10 @@
     // UPDATE STATUS KELUAR
     window.updateExitStatus = async function(id, newStatus) {
       try {
-        await updateDoc(doc(db, "parkir_data", String(id)), { exitStatus: newStatus });
+        await updateDoc(doc(db, currentSelectedDate, String(id)), { exitStatus: newStatus });
         
-        if (newStatus === "SESUAI") playAudioNotif("VERIFY"); // 🔊 SUARA VERIFIKASI
-        else if (newStatus === "TIDAK_SESUAI") playAudioNotif("WARNING"); // 🔊 SUARA PERINGATAN
+        if (newStatus === "SESUAI") playAudioNotif("VERIFY");
+        else if (newStatus === "TIDAK_SESUAI") playAudioNotif("WARNING");
 
         setTimeout(() => {
           const updatedItem = parkingData.find(d => d.id == id);
@@ -425,10 +467,10 @@
       }
     };
 
-    // EXPORT TO EXCEL (.XLSX)
+    // EXPORT KE EXCEL
     window.exportToExcel = function() {
       if (parkingData.length === 0) {
-        alert("Belum ada data parkir untuk di-export!");
+        alert("Belum ada data parkir untuk tanggal ini!");
         return;
       }
 
@@ -444,12 +486,11 @@
 
       const worksheet = XLSX.utils.json_to_sheet(excelRows);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Data Parkir");
-
-      XLSX.writeFile(workbook, `Parkir_AFKAB_Backup_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.utils.book_append_sheet(workbook, worksheet, currentSelectedDate);
+      XLSX.writeFile(workbook, `Parkir_AFKAB_${currentSelectedDate}.xlsx`);
     };
 
-    // IMPORT / BACKUP FROM EXCEL
+    // IMPORT DARI EXCEL
     window.importFromExcel = function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -466,7 +507,7 @@
             const ticketId = row["No Tiket"] || row["No"] || row["id"];
             if (ticketId) {
               const platParts = (row["Plat Nomor"] || "").split(" ");
-              await setDoc(doc(db, "parkir_data", String(ticketId)), {
+              await setDoc(doc(db, currentSelectedDate, String(ticketId)), {
                 id: Number(ticketId),
                 type: row["Jenis Kendaraan"] || "Sepedah",
                 plateFront: platParts[0] || "AG",
@@ -480,7 +521,7 @@
               });
             }
           }
-          alert("Import Excel berhasil dimasukkan ke Firebase!");
+          showToast("Data Excel berhasil di-import ke Firebase!");
         } catch (err) {
           alert("Gagal membaca file Excel: " + err.message);
         }
@@ -505,29 +546,29 @@
     function renderTable(data) {
       const tbody = document.getElementById("table-body-container");
       if (data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 font-medium">Belum ada data parkir.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500 font-medium">Belum ada data parkir untuk tanggal ini.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = data.map(item => {
-        let badgeHTML = `<span class="bg-amber-100/90 text-amber-800 text-[10px] font-bold px-2.5 py-1 rounded-md">Di Parkiran</span>`;
+        let badgeHTML = `<span class="bg-amber-950/80 text-amber-300 border border-amber-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Di Parkiran</span>`;
         if (item.exitStatus === "SESUAI") {
-          badgeHTML = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-md">Keluar (Sesuai)</span>`;
+          badgeHTML = `<span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Keluar (Sesuai)</span>`;
         } else if (item.exitStatus === "TIDAK_SESUAI") {
-          badgeHTML = `<span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-1 rounded-md">Tidak Sesuai</span>`;
+          badgeHTML = `<span class="bg-rose-950/80 text-rose-300 border border-rose-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Tidak Sesuai</span>`;
         }
 
         return `
-          <tr class="hover:bg-slate-50/80 transition">
-            <td class="py-3 px-2 font-extrabold text-slate-800">#${item.id}</td>
-            <td class="py-3 px-2 font-bold text-slate-700">${item.type}</td>
-            <td class="py-3 px-2 font-black text-slate-800 tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</td>
-            <td class="py-3 px-2 text-center font-bold text-slate-600">${item.person}</td>
-            <td class="py-3 px-2 text-center font-bold text-slate-600">${item.helmet}</td>
-            <td class="py-3 px-2 font-extrabold text-emerald-600">Rp ${Number(item.cost).toLocaleString("id-ID")}</td>
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="py-3 px-2 font-extrabold text-slate-200">#${item.id}</td>
+            <td class="py-3 px-2 font-bold text-slate-300">${item.type}</td>
+            <td class="py-3 px-2 font-black text-slate-100 tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</td>
+            <td class="py-3 px-2 text-center font-bold text-slate-300">${item.person}</td>
+            <td class="py-3 px-2 text-center font-bold text-slate-300">${item.helmet}</td>
+            <td class="py-3 px-2 font-extrabold text-emerald-400">Rp ${Number(item.cost).toLocaleString("id-ID")}</td>
             <td class="py-3 px-2 text-center">${badgeHTML}</td>
             <td class="py-3 px-2 text-center">
-              <button onclick="selectForVerification(${item.id})" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold px-3 py-1 rounded-lg transition">
+              <button onclick="selectForVerification(${item.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-3 py-1 rounded-lg transition border border-slate-700">
                 Cek
               </button>
             </td>
@@ -543,7 +584,7 @@
       const item = parkingData.find(d => d.id == searchId);
       if (!item) {
         document.getElementById("verification-result-box").innerHTML = `
-          <div class="text-center text-rose-500 space-y-1">
+          <div class="text-center text-rose-400 space-y-1">
             <i class="fa-solid fa-circle-exclamation text-2xl"></i>
             <p class="text-xs font-bold">Data Tiket #${searchId} Tidak Ditemukan!</p>
           </div>
@@ -560,43 +601,43 @@
     };
 
     function renderVerificationCard(item) {
-      let badgeClass = "bg-amber-100 text-amber-800";
+      let badgeClass = "bg-amber-950 text-amber-300 border border-amber-800";
       let statusText = "Masih Parkir";
       if (item.exitStatus === "SESUAI") {
-        badgeClass = "bg-emerald-100 text-emerald-800";
+        badgeClass = "bg-emerald-950 text-emerald-300 border border-emerald-800";
         statusText = "Keluar (Sesuai)";
       } else if (item.exitStatus === "TIDAK_SESUAI") {
-        badgeClass = "bg-rose-100 text-rose-800";
+        badgeClass = "bg-rose-950 text-rose-300 border border-rose-800";
         statusText = "Tidak Sesuai";
       }
 
       document.getElementById("verification-result-box").innerHTML = `
         <div class="w-full space-y-3.5">
-          <div class="flex items-center justify-between border-b border-slate-200/80 pb-2.5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <div>
               <p class="text-[10px] font-bold text-slate-400 uppercase">NOMOR PARKIR</p>
-              <p class="text-3xl font-black text-slate-800">#${item.id}</p>
+              <p class="text-3xl font-black text-slate-100">#${item.id}</p>
             </div>
             <div class="text-right">
               <span class="text-[10px] font-bold px-2.5 py-1 rounded-md ${badgeClass}">${statusText}</span>
-              <p class="text-xs font-bold text-slate-500 mt-1">${item.type}</p>
+              <p class="text-xs font-bold text-slate-400 mt-1">${item.type}</p>
             </div>
           </div>
 
           <div class="space-y-2 text-xs">
-            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Plat Nomor:</span><span class="font-black text-slate-800 text-sm tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</span></div>
-            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Orang:</span><span class="font-bold text-slate-700">${item.person} Orang</span></div>
-            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Helm:</span><span class="font-bold text-slate-700">${item.helmet} Helm</span></div>
-            <div class="flex justify-between pt-1 border-t border-slate-200/60"><span class="text-slate-400 font-semibold">Tarif Parkir:</span><span class="font-black text-emerald-600 text-sm">Rp ${Number(item.cost).toLocaleString("id-ID")}</span></div>
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Plat Nomor:</span><span class="font-black text-slate-100 text-sm tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</span></div>
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Orang:</span><span class="font-bold text-slate-300">${item.person} Orang</span></div>
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Helm:</span><span class="font-bold text-slate-300">${item.helmet} Helm</span></div>
+            <div class="flex justify-between pt-1 border-t border-slate-800"><span class="text-slate-400 font-semibold">Tarif Parkir:</span><span class="font-black text-emerald-400 text-sm">Rp ${Number(item.cost).toLocaleString("id-ID")}</span></div>
           </div>
 
           <div class="pt-2">
             <p class="text-[10px] font-bold text-slate-400 uppercase text-center mb-2">VERIFIKASI KELUAR PENGUNJUNG:</p>
             <div class="grid grid-cols-2 gap-2">
-              <button onclick="updateExitStatus(${item.id}, 'SESUAI')" class="bg-emerald-100/80 hover:bg-emerald-200 text-emerald-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              <button onclick="updateExitStatus(${item.id}, 'SESUAI')" class="bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
                 <i class="fa-solid fa-circle-check"></i> Sesuai
               </button>
-              <button onclick="updateExitStatus(${item.id}, 'TIDAK_SESUAI')" class="bg-rose-100/80 hover:bg-rose-200 text-rose-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+              <button onclick="updateExitStatus(${item.id}, 'TIDAK_SESUAI')" class="bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
                 <i class="fa-solid fa-triangle-exclamation"></i> Tidak Sesuai
               </button>
             </div>
@@ -608,12 +649,15 @@
     window.resetVerification = function() {
       document.getElementById("verify-id-input").value = "";
       document.getElementById("verification-result-box").innerHTML = `
-        <div class="text-center text-slate-400 space-y-2">
+        <div class="text-center text-slate-600 space-y-2">
           <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
           <p class="text-xs font-medium">Ketik nomor parkir untuk memeriksa data kendaraan.</p>
         </div>
       `;
     };
+
+    // INISIALISASI PERTAMA KALI
+    setupRealtimeListener();
   </script>
 </body>
 </html>
