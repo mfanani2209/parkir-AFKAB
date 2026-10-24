@@ -2,9 +2,8 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <!-- ANTI-ZOOM DI MOBILE -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Parkir AFKAB - Firebase & Vercel Edition</title>
+  <title>Parkir AFKAB - Firebase Edition</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -33,8 +32,8 @@
     <div class="bg-emerald-600 text-white px-8 py-6 rounded-3xl shadow-2xl flex items-center space-x-4 border-2 border-emerald-400 transform scale-75 opacity-0 transition-all duration-300" id="toast-card">
       <i class="fa-solid fa-circle-check text-4xl text-emerald-100 animate-bounce"></i>
       <div>
-        <h4 class="font-black text-sm uppercase tracking-wider">BERHASIL DISIMPAN!</h4>
-        <p id="toast-message" class="text-xs text-emerald-100 font-medium mt-0.5">Data parkir berhasil masuk ke Firebase.</p>
+        <h4 class="font-black text-sm uppercase tracking-wider">BERHASIL!</h4>
+        <p id="toast-message" class="text-xs text-emerald-100 font-medium mt-0.5">Data parkir berhasil diproses.</p>
       </div>
     </div>
   </div>
@@ -113,21 +112,19 @@
         </div>
       </div>
 
-      <!-- CARD 2: INPUT PARKIR MASUK -->
+      <!-- CARD 2: INPUT / EDIT PARKIR -->
       <div class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl">
         <div class="flex items-center justify-between mb-4">
-          <h2 class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
+          <h2 id="form-title" class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2">
             <i class="fa-solid fa-circle-plus text-teal-400"></i>
             INPUT PARKIR MASUK
           </h2>
-          <span class="text-xs font-extrabold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-1 rounded-lg">
-            Manual / Bebas
-          </span>
+          <button id="btn-cancel-edit" onclick="resetFormMode()" class="hidden text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-lg font-bold">Batal Edit</button>
         </div>
 
         <form id="form-parking" onsubmit="submitParkingEntry(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Nomor Tiket / Parkir (Otomatis Kosong)</label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Nomor Tiket / Parkir</label>
             <input type="number" id="form-id" required placeholder="Ketik nomor tiket..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
           </div>
 
@@ -141,7 +138,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Plat Nomor (Otomatis Kosong)</label>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Plat Nomor</label>
             <div class="grid grid-cols-3 gap-2">
               <input type="text" id="form-plate-front" value="AG" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500">
               <input type="text" id="form-plate-num" placeholder="XXXX" required class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
@@ -281,7 +278,7 @@
   <!-- FIREBASE SDK v9 MODULE -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCIS9fXM7g5kTBRzBCbPHTXinzmvHO2C8U",
@@ -300,7 +297,7 @@
     let parkingData = [];
     let unsubscribeSnapshot = null;
 
-    // SUARA NOTIFIKASI LEBIH KERAS (GAIN VOLUME 0.6)
+    // SUARA NOTIFIKASI LEBIH KERAS
     function playAudioNotif(type) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -312,7 +309,7 @@
         if (type === "SUCCESS") {
           osc.frequency.setValueAtTime(587.33, ctx.currentTime);
           osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
-          gain.gain.setValueAtTime(0.6, ctx.currentTime); // Lebih keras
+          gain.gain.setValueAtTime(0.6, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
           osc.start(ctx.currentTime);
           osc.stop(ctx.currentTime + 0.4);
@@ -410,7 +407,7 @@
       document.getElementById("stat-total-revenue").textContent = "Rp " + grandTotal.toLocaleString("id-ID");
     }
 
-    // SIMPAN DATA PARKIR (FORM OTOMATIS KOSONG TERMASUK NO TIKET)
+    // SIMPAN / TIMPA / EDIT DATA PARKIR
     window.submitParkingEntry = async function(e) {
       e.preventDefault();
       const idVal = Number(document.getElementById("form-id").value);
@@ -420,6 +417,13 @@
       const pBack = document.getElementById("form-plate-back").value.toUpperCase();
       const personVal = Number(document.getElementById("form-person").value) || 0;
       const helmetVal = Number(document.getElementById("form-helmet").value) || 0;
+
+      // CEK APAKAH NOMOR TIKET SUDAH ADA DI FIREBASE
+      const existingItem = parkingData.find(d => Number(d.id) === idVal);
+      if (existingItem) {
+        const confirmOverwrite = confirm(`Nomor Tiket #${idVal} sudah terdaftar! Apakah Anda ingin menimpa/mengganti data tersebut?`);
+        if (!confirmOverwrite) return;
+      }
 
       let costVal = 0;
       if (typeVal === "Sepedah") costVal = 5000;
@@ -434,23 +438,65 @@
         person: personVal,
         helmet: helmetVal,
         cost: costVal,
-        exitStatus: "NONE",
+        exitStatus: existingItem ? existingItem.exitStatus : "NONE",
         timestamp: new Date().toISOString()
       };
 
       try {
         await setDoc(doc(db, currentSelectedDate, String(idVal)), entry);
-        playAudioNotif("SUCCESS"); // 🔊 Suara Lebih Keras
-        showToast(`Tiket #${idVal} Berhasil Disimpan!`); // 🔔 Notifikasi Besar di Tengah
-
-        // KOSONGKAN SELURUH FORM INPUT (NOMOR TIKET IKUT DIKOSONGKAN)
-        document.getElementById("form-id").value = "";
-        document.getElementById("form-plate-num").value = "";
-        document.getElementById("form-plate-back").value = "";
-        document.getElementById("form-person").value = "";
-        document.getElementById("form-helmet").value = "";
+        playAudioNotif("SUCCESS");
+        showToast(`Tiket #${idVal} Berhasil Disimpan!`);
+        resetFormMode();
       } catch (err) {
         alert("Gagal simpan ke Firebase: " + err.message);
+      }
+    };
+
+    // FITUR EDIT: MASUKKAN DATA KE FORM
+    window.editData = function(id) {
+      const item = parkingData.find(d => Number(d.id) === Number(id));
+      if (!item) return;
+
+      document.getElementById("form-id").value = item.id;
+      document.getElementById("form-id").readOnly = true; // Kunci ID saat edit
+      document.getElementById("form-id").classList.add("bg-slate-900", "text-slate-500");
+      document.getElementById("form-type").value = item.type;
+      document.getElementById("form-plate-front").value = item.plateFront;
+      document.getElementById("form-plate-num").value = item.plateNum;
+      document.getElementById("form-plate-back").value = item.plateBack;
+      document.getElementById("form-person").value = item.person;
+      document.getElementById("form-helmet").value = item.helmet;
+
+      document.getElementById("form-title.innerHTML") // Ubah judul form
+      document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-400"></i> EDIT TIKET #${item.id}`;
+      document.getElementById("btn-submit").textContent = "Perbarui Data";
+      document.getElementById("btn-submit").className = "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg transition";
+      document.getElementById("btn-cancel-edit").classList.remove("hidden");
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.resetFormMode = function() {
+      document.getElementById("form-parking").reset();
+      document.getElementById("form-id").readOnly = false;
+      document.getElementById("form-id").classList.remove("bg-slate-900", "text-slate-500");
+      document.getElementById("form-title").innerHTML = `<i class="fa-solid fa-circle-plus text-teal-400"></i> INPUT PARKIR MASUK`;
+      document.getElementById("btn-submit").textContent = "Simpan ke Firebase";
+      document.getElementById("btn-submit").className = "w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-600/30 text-sm transition";
+      document.getElementById("btn-cancel-edit").classList.add("hidden");
+    };
+
+    // FITUR HAPUS DATA
+    window.deleteData = async function(id) {
+      const confirmDel = confirm(`Apakah Anda yakin ingin menghapus Tiket #${id}?`);
+      if (!confirmDel) return;
+
+      try {
+        await deleteDoc(doc(db, currentSelectedDate, String(id)));
+        showToast(`Tiket #${id} Berhasil Dihapus!`);
+        playAudioNotif("WARNING");
+      } catch (err) {
+        alert("Gagal menghapus data: " + err.message);
       }
     };
 
@@ -568,10 +614,10 @@
             <td class="py-3 px-2 text-center font-bold text-slate-300">${item.helmet}</td>
             <td class="py-3 px-2 font-extrabold text-emerald-400">Rp ${Number(item.cost).toLocaleString("id-ID")}</td>
             <td class="py-3 px-2 text-center">${badgeHTML}</td>
-            <td class="py-3 px-2 text-center">
-              <button onclick="selectForVerification(${item.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-3 py-1 rounded-lg transition border border-slate-700">
-                Cek
-              </button>
+            <td class="py-3 px-2 text-center space-x-1">
+              <button onclick="selectForVerification(${item.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-lg transition border border-slate-700" title="Cek">Cek</button>
+              <button onclick="editData(${item.id})" class="bg-amber-950 hover:bg-amber-900 text-amber-300 text-[11px] font-bold px-2 py-1 rounded-lg transition border border-amber-800" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteData(${item.id})" class="bg-rose-950 hover:bg-rose-900 text-rose-300 text-[11px] font-bold px-2 py-1 rounded-lg transition border border-rose-800" title="Hapus"><i class="fa-solid fa-trash"></i></button>
             </td>
           </tr>
         `;
