@@ -1,470 +1,1021 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Seleksi Futsal - Tim Futsal Ponprov Kab. Kediri</title>
-    <!-- Tailwind CSS CDN -->
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Parkir AFKAB</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- SheetJS untuk Export & Import Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
     <style>
-        body { background-color: #0b0f19; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
+      @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
     </style>
-</head>
-<body class="min-h-screen flex flex-col">
-    <!-- Header -->
-    <header class="bg-[#111827] border-b border-gray-800 py-4 px-6 flex justify-between items-center shadow-md">
+  </head>
+  <body
+    class="bg-slate-950 text-slate-100 min-h-screen pb-12 selection:bg-teal-500 selection:text-white"
+  >
+    <!-- OVERLAY LOADING GLOBAL -->
+    <div
+      id="global-loading"
+      class="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-50 hidden flex-col items-center justify-center transition-all"
+    >
+      <div
+        class="bg-slate-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center space-y-3 border border-slate-800"
+      >
+        <div
+          class="w-10 h-10 border-4 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"
+        ></div>
+        <p id="loading-text" class="text-xs font-bold text-slate-200">
+          Memproses data Firebase...
+        </p>
+      </div>
+    </div>
+
+    <!-- NOTIFIKASI BESAR DI TENGAH LAYAR -->
+    <div
+      id="success-toast"
+      class="fixed inset-0 z-50 pointer-events-none hidden items-center justify-center p-4 transition-all duration-300"
+    >
+      <div
+        class="bg-emerald-600 text-white px-8 py-6 rounded-3xl shadow-2xl flex items-center space-x-4 border-2 border-emerald-400 transform scale-75 opacity-0 transition-all duration-300"
+        id="toast-card"
+      >
+        <i
+          class="fa-solid fa-circle-check text-4xl text-emerald-100 animate-bounce"
+        ></i>
+        <div>
+          <h4 class="font-black text-sm uppercase tracking-wider">BERHASIL!</h4>
+          <p
+            id="toast-message"
+            class="text-xs text-emerald-100 font-medium mt-0.5"
+          >
+            Data parkir berhasil diproses.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEADER UTAMA -->
+    <header
+      class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between"
+      >
         <div class="flex items-center space-x-3">
-            <div class="bg-emerald-600 text-white font-bold px-3 py-2 rounded-lg text-lg">SF</div>
-            <div>
-                <h1 class="text-xl font-bold tracking-wide">Sistem Seleksi Futsal</h1>
-                <p class="text-xs text-gray-400">Tim Futsal Ponprov Kab. Kediri</p>
-            </div>
+          <div
+            class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-teal-600/20"
+          >
+            P
+          </div>
+          <div>
+            <h1
+              class="font-extrabold text-slate-100 text-sm sm:text-base leading-tight"
+            >
+              Parkir AFKAB
+            </h1>
+            <p class="text-[10px] sm:text-xs text-slate-400 font-medium">
+              LIGA Afkab Kediri
+            </p>
+          </div>
         </div>
-        <div id="sync-status" class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs px-3 py-1 rounded-full flex items-center space-x-2">
-            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            <span>Live Cloud Active</span>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+          <div class="relative">
+            <select
+              id="sheet-tab-select"
+              onchange="changeActiveDate(this.value)"
+              class="appearance-none bg-slate-800 border border-slate-700 text-teal-400 font-bold text-xs rounded-xl px-3 sm:px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+            >
+              <option value="TGL 25-10-2026">25 Okt 2026</option>
+              <option value="TGL 01-11-2026">01 Nov 2026</option>
+              <option value="TGL 08-11-2026">08 Nov 2026</option>
+              <option value="TGL 15-11-2026">15 Nov 2026</option>
+              <option value="TGL 22-11-2026">22 Nov 2026</option>
+              <option value="TGL 29-11-2026">29 Nov 2026</option>
+            </select>
+            <i
+              class="fa-solid fa-chevron-down absolute right-2.5 top-3.5 text-[10px] text-slate-400 pointer-events-none"
+            ></i>
+          </div>
+
+          <button
+            onclick="exportToExcel()"
+            class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition"
+          >
+            <i class="fa-solid fa-file-excel"></i>
+            <span class="hidden sm:inline">Export</span>
+          </button>
+
+          <label
+            class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <i class="fa-solid fa-file-import"></i>
+            <span class="hidden sm:inline">Import</span>
+            <input
+              type="file"
+              id="import-excel-file"
+              accept=".xlsx, .xls"
+              onchange="importFromExcel(event)"
+              class="hidden"
+            />
+          </label>
         </div>
+      </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-        <!-- Top Action Bar -->
-        <div class="bg-[#111827] border border-gray-800 rounded-xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <!-- MAIN CONTAINER -->
+    <main
+      class="max-w-7xl mx-auto px-4 sm:px-6 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6"
+    >
+      <!-- KOLOM KIRI (VERIFIKASI & INPUT) -->
+      <div class="lg:col-span-4 space-y-6">
+        <!-- CARD 1: VERIFIKASI KELUAR -->
+        <div
+          class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2
+              class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2"
+            >
+              <i class="fa-solid fa-magnifying-glass text-teal-400"></i>
+              VERIFIKASI KELUAR
+            </h2>
+            <span
+              class="text-[10px] font-extrabold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full"
+              >Fast Search</span
+            >
+          </div>
+
+          <div class="space-y-3">
+            <label class="block text-xs font-semibold text-slate-400"
+              >Masukkan Nomor Parkir:</label
+            >
+            <div class="relative flex items-center">
+              <input
+                type="number"
+                id="verify-id-input"
+                oninput="handleVerificationSearch()"
+                placeholder="Ketik angka tiket..."
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+              />
+              <button
+                onclick="resetVerification()"
+                class="absolute right-2 text-xs font-bold text-slate-400 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition"
+              >
+                Reset
+              </button>
+            </div>
+
+            <div
+              id="verification-result-box"
+              class="mt-4 bg-slate-950/60 border border-slate-800 rounded-2xl p-5 min-h-[200px] flex items-center justify-center"
+            >
+              <div class="text-center text-slate-600 space-y-2">
+                <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
+                <p class="text-xs font-medium">
+                  Ketik nomor parkir untuk memeriksa data kendaraan.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 2: INPUT / EDIT PARKIR -->
+        <div
+          class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2
+              id="form-title"
+              class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2"
+            >
+              <i class="fa-solid fa-circle-plus text-teal-400"></i>
+              INPUT PARKIR MASUK
+            </h2>
+            <button
+              id="btn-cancel-edit"
+              onclick="resetFormMode()"
+              class="hidden text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-lg font-bold"
+            >
+              Batal Edit
+            </button>
+          </div>
+
+          <form
+            id="form-parking"
+            onsubmit="submitParkingEntry(event)"
+            class="space-y-4"
+          >
             <div>
-                <h2 class="text-lg font-semibold">Daftar Kehadiran Peserta</h2>
-                <p class="text-sm text-gray-400" id="total-counter">Total Peserta Terdaftar: 258</p>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Nomor Tiket / Parkir</label
+              >
+              <input
+                type="number"
+                id="form-id"
+                required
+                placeholder="Ketik nomor tiket..."
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+              />
             </div>
-            <div class="flex items-center gap-3">
-                <button id="btn-inject-data" class="bg-amber-500 hover:bg-amber-600 text-gray-950 font-semibold px-4 py-2 rounded-lg text-sm transition shadow">
-                    ⚡ Masukkan 258 Data Excel
-                </button>
-                <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition shadow">
-                    + Tambah Peserta Baru
-                </button>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Jenis Kendaraan</label
+              >
+              <select
+                id="form-type"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="Sepedah">Sepedah (Rp 5.000)</option>
+                <option value="Mobil">Mobil (Rp 10.000)</option>
+                <option value="Tamu">Tamu (Rp 0)</option>
+              </select>
             </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1"
+                >Plat Nomor</label
+              >
+              <div class="grid grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  id="form-plate-front"
+                  value="AG"
+                  class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <input
+                  type="text"
+                  id="form-plate-num"
+                  placeholder="XXXX"
+                  required
+                  class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+                />
+                <input
+                  type="text"
+                  id="form-plate-back"
+                  placeholder="YY"
+                  class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1"
+                  >Jumlah Orang</label
+                >
+                <input
+                  type="number"
+                  id="form-person"
+                  min="1"
+                  value=""
+                  placeholder="0"
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1"
+                  >Jumlah Helm</label
+                >
+                <input
+                  type="number"
+                  id="form-helmet"
+                  min="0"
+                  value=""
+                  placeholder="0"
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              id="btn-submit"
+              class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-600/30 text-sm transition"
+            >
+              Simpan ke Firebase
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- KOLOM KANAN (DASHBOARD & TABEL) -->
+      <div class="lg:col-span-8 space-y-6">
+        <!-- CARD RINGKASAN TOTAL -->
+        <div
+          class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2
+              class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2"
+            >
+              <i class="fa-solid fa-chart-line text-teal-400"></i>
+              RINGKASAN REAL-TIME
+            </h2>
+            <span
+              id="active-date-badge"
+              class="text-xs font-bold text-teal-400 bg-teal-950/80 border border-teal-800 px-3 py-1 rounded-xl"
+            >
+              Minggu, 25 Okt 2026
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div
+              class="sm:col-span-4 bg-slate-950 border border-slate-800 text-white rounded-2xl p-4 flex flex-col justify-between"
+            >
+              <div>
+                <p
+                  class="text-[10px] font-bold tracking-wider text-slate-400 uppercase"
+                >
+                  TOTAL PENDAPATAN
+                </p>
+                <p
+                  id="stat-total-revenue"
+                  class="text-2xl font-black text-emerald-400 mt-1"
+                >
+                  Rp 0
+                </p>
+              </div>
+              <div
+                class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400"
+              >
+                <span>Total Tiket:</span>
+                <span id="stat-total-tickets" class="font-bold text-slate-200"
+                  >0</span
+                >
+              </div>
+            </div>
+
+            <div class="sm:col-span-8 grid grid-cols-3 gap-2.5">
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center"
+              >
+                <i
+                  class="fa-solid fa-motorcycle text-indigo-400 text-lg mb-1"
+                ></i>
+                <p class="text-[10px] font-medium text-slate-400">Sepedah</p>
+                <p
+                  id="stat-sepedah-count"
+                  class="text-lg font-bold text-slate-200"
+                >
+                  0
+                </p>
+              </div>
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center"
+              >
+                <i class="fa-solid fa-car text-blue-400 text-lg mb-1"></i>
+                <p class="text-[10px] font-medium text-slate-400">Mobil</p>
+                <p
+                  id="stat-mobil-count"
+                  class="text-lg font-bold text-slate-200"
+                >
+                  0
+                </p>
+              </div>
+              <div
+                class="bg-slate-950 border border-slate-800 rounded-2xl p-3 text-center flex flex-col justify-center"
+              >
+                <i
+                  class="fa-solid fa-user-shield text-amber-400 text-lg mb-1"
+                ></i>
+                <p class="text-[10px] font-medium text-slate-400">Tamu</p>
+                <p
+                  id="stat-tamu-count"
+                  class="text-lg font-bold text-slate-200"
+                >
+                  0
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mt-3">
+            <div
+              class="bg-amber-950/40 border border-amber-900/50 rounded-xl p-2.5 text-center"
+            >
+              <p
+                class="text-[9px] font-extrabold text-amber-400 uppercase tracking-wider"
+              >
+                MASIH PARKIR
+              </p>
+              <p
+                id="stat-masih-parkir"
+                class="text-base font-black text-amber-300 mt-0.5"
+              >
+                0
+              </p>
+            </div>
+            <div
+              class="bg-emerald-950/40 border border-emerald-900/50 rounded-xl p-2.5 text-center"
+            >
+              <p
+                class="text-[9px] font-extrabold text-emerald-400 uppercase tracking-wider"
+              >
+                KELUAR (SESUAI)
+              </p>
+              <p
+                id="stat-keluar-sesuai"
+                class="text-base font-black text-emerald-300 mt-0.5"
+              >
+                0
+              </p>
+            </div>
+            <div
+              class="bg-rose-950/40 border border-rose-900/50 rounded-xl p-2.5 text-center"
+            >
+              <p
+                class="text-[9px] font-extrabold text-rose-400 uppercase tracking-wider"
+              >
+                TIDAK SESUAI
+              </p>
+              <p
+                id="stat-tidak-sesuai"
+                class="text-base font-black text-rose-300 mt-0.5"
+              >
+                0
+              </p>
+            </div>
+          </div>
         </div>
 
-        <!-- Filters -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="search-input" placeholder="Cari nama atau asal sekolah..." class="bg-[#111827] border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
-            <select id="position-filter" class="bg-[#111827] border border-gray-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
-                <option value="">Semua Posisi</option>
-                <option value="GK">GK</option>
-                <option value="Anchor">Anchor</option>
-                <option value="Flank">Flank</option>
-                <option value="Pivot">Pivot</option>
-            </select>
-        </div>
+        <!-- CARD TABEL DATA -->
+        <div
+          class="bg-slate-900 rounded-2xl p-5 border border-slate-800 shadow-xl"
+        >
+          <div
+            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4"
+          >
+            <h2
+              class="font-bold text-slate-200 text-xs tracking-wider uppercase flex items-center gap-2"
+            >
+              <i class="fa-solid fa-table-list text-teal-400"></i>
+              DATA PARKIR FIRESTORE
+            </h2>
 
-        <!-- Table -->
-        <div class="bg-[#111827] border border-gray-800 rounded-xl overflow-hidden shadow-lg">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-800 text-gray-400 bg-gray-900/50">
-                            <th class="p-4 font-medium">NO</th>
-                            <th class="p-4 font-medium">NAMA PESERTA</th>
-                            <th class="p-4 font-medium">ASAL SEKOLAH</th>
-                            <th class="p-4 font-medium">NO. HP</th>
-                            <th class="p-4 font-medium">POSISI</th>
-                            <th class="p-4 font-medium text-right">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody id="participant-table-body" class="divide-y divide-gray-800">
-                        <!-- Data will be rendered dynamically -->
-                    </tbody>
-                </table>
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+              <div class="relative flex-1 sm:w-48">
+                <input
+                  type="text"
+                  id="filter-search"
+                  oninput="applyFilters()"
+                  placeholder="Filter No. Parkir..."
+                  class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs font-semibold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600"
+                />
+                <i
+                  class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-xs text-slate-500"
+                ></i>
+              </div>
+
+              <select
+                id="filter-status"
+                onchange="applyFilters()"
+                class="bg-slate-950 border border-slate-800 text-slate-300 font-semibold text-xs rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="ALL">Semua Status</option>
+                <option value="NONE">Di Parkiran</option>
+                <option value="SESUAI">Keluar (Sesuai)</option>
+                <option value="TIDAK_SESUAI">Tidak Sesuai</option>
+              </select>
             </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr
+                  class="border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider"
+                >
+                  <th class="py-3 px-2">NO</th>
+                  <th class="py-3 px-2">KENDARAAN</th>
+                  <th class="py-3 px-2">PLAT NOMOR</th>
+                  <th class="py-3 px-2 text-center">ORANG</th>
+                  <th class="py-3 px-2 text-center">HELM</th>
+                  <th class="py-3 px-2">TARIF</th>
+                  <th class="py-3 px-2 text-center">STATUS KELUAR</th>
+                  <th class="py-3 px-2 text-center">AKSI</th>
+                </tr>
+              </thead>
+              <tbody
+                id="table-body-container"
+                class="divide-y divide-slate-800/60"
+              >
+                <!-- Data dimuat real-time -->
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </main>
 
-    <!-- Firebase & Main Logic Script -->
+    <!-- FIREBASE SDK v9 MODULE -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        setDoc,
+        updateDoc,
+        deleteDoc,
+        onSnapshot,
+      } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-        // Konfigurasi Firebase Anda
-        const firebaseConfig = {
-            apiKey: "AIzaSyDummyKeyForFutsalApp",
-            authDomain: "seleksi-futsal.firebaseapp.com",
-            projectId: "seleksi-futsal",
-            storageBucket: "seleksi-futsal.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123456789:web:abcdef"
+      const firebaseConfig = {
+        apiKey: "AIzaSyCIS9fXM7g5kTBRzBCbPHTXinzmvHO2C8U",
+        authDomain: "parkir-afkab.firebaseapp.com",
+        projectId: "parkir-afkab",
+        storageBucket: "parkir-afkab.firebasestorage.app",
+        messagingSenderId: "928150761756",
+        appId: "1:928150761756:web:6f04316a1fb7bbb5d74ad9",
+        measurementId: "G-7706128ZGR",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+
+      let currentSelectedDate = "TGL 25-10-2026";
+      let parkingData = [];
+      let unsubscribeSnapshot = null;
+
+      // SUARA NOTIFIKASI LEBIH KERAS
+      function playAudioNotif(type) {
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+
+          if (type === "SUCCESS") {
+            osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+            osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.6, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+          } else if (type === "VERIFY") {
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+            gain.gain.setValueAtTime(0.6, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.5);
+          } else if (type === "WARNING") {
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(300, ctx.currentTime);
+            osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.7, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.4);
+          }
+        } catch (e) {
+          console.log("Audio error:", e);
+        }
+      }
+
+      // NOTIFIKASI BESAR DI TENGAH LAYAR
+      function showToast(message) {
+        const toast = document.getElementById("success-toast");
+        const card = document.getElementById("toast-card");
+        document.getElementById("toast-message").textContent = message;
+
+        toast.classList.remove("hidden");
+        toast.classList.add("flex");
+        setTimeout(() => {
+          card.classList.remove("scale-75", "opacity-0");
+          card.classList.add("scale-100", "opacity-100");
+        }, 10);
+
+        setTimeout(() => {
+          card.classList.remove("scale-100", "opacity-100");
+          card.classList.add("scale-75", "opacity-0");
+          setTimeout(() => {
+            toast.classList.remove("flex");
+            toast.classList.add("hidden");
+          }, 300);
+        }, 2500);
+      }
+
+      window.changeActiveDate = function (dateKey) {
+        currentSelectedDate = dateKey;
+        const selectEl = document.getElementById("sheet-tab-select");
+        document.getElementById("active-date-badge").textContent =
+          selectEl.options[selectEl.selectedIndex].text.replace("📅 ", "");
+        setupRealtimeListener();
+      };
+
+      function setupRealtimeListener() {
+        if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+        const colRef = collection(db, currentSelectedDate);
+        unsubscribeSnapshot = onSnapshot(
+          colRef,
+          (snapshot) => {
+            parkingData = [];
+            snapshot.forEach((docSnap) => {
+              parkingData.push(docSnap.data());
+            });
+
+            parkingData.sort((a, b) => Number(a.id) - Number(b.id));
+            applyFilters();
+            updateDashboardStats();
+          },
+          (error) => {
+            console.error("Firebase error:", error);
+          },
+        );
+      }
+
+      function updateDashboardStats() {
+        const totalTickets = parkingData.length;
+        const sepedahCount = parkingData.filter(
+          (i) => i.type === "Sepedah",
+        ).length;
+        const mobilCount = parkingData.filter((i) => i.type === "Mobil").length;
+        const tamuCount = parkingData.filter((i) => i.type === "Tamu").length;
+
+        const masihParkir = parkingData.filter(
+          (i) => i.exitStatus === "NONE",
+        ).length;
+        const keluarSesuai = parkingData.filter(
+          (i) => i.exitStatus === "SESUAI",
+        ).length;
+        const tdkSesuai = parkingData.filter(
+          (i) => i.exitStatus === "TIDAK_SESUAI",
+        ).length;
+
+        const grandTotal = sepedahCount * 5000 + mobilCount * 10000;
+
+        document.getElementById("stat-total-tickets").textContent =
+          totalTickets;
+        document.getElementById("stat-sepedah-count").textContent =
+          sepedahCount;
+        document.getElementById("stat-mobil-count").textContent = mobilCount;
+        document.getElementById("stat-tamu-count").textContent = tamuCount;
+
+        document.getElementById("stat-masih-parkir").textContent = masihParkir;
+        document.getElementById("stat-keluar-sesuai").textContent =
+          keluarSesuai;
+        document.getElementById("stat-tidak-sesuai").textContent = tdkSesuai;
+
+        document.getElementById("stat-total-revenue").textContent =
+          "Rp " + grandTotal.toLocaleString("id-ID");
+      }
+
+      // SIMPAN / TIMPA / EDIT DATA PARKIR
+      window.submitParkingEntry = async function (e) {
+        e.preventDefault();
+        const idVal = Number(document.getElementById("form-id").value);
+        const typeVal = document.getElementById("form-type").value;
+        const pFront = document
+          .getElementById("form-plate-front")
+          .value.toUpperCase();
+        const pNum = document.getElementById("form-plate-num").value;
+        const pBack = document
+          .getElementById("form-plate-back")
+          .value.toUpperCase();
+        const personVal =
+          Number(document.getElementById("form-person").value) || 0;
+        const helmetVal =
+          Number(document.getElementById("form-helmet").value) || 0;
+
+        // CEK APAKAH NOMOR TIKET SUDAH ADA DI FIREBASE
+        const existingItem = parkingData.find((d) => Number(d.id) === idVal);
+        if (existingItem) {
+          const confirmOverwrite = confirm(
+            `Nomor Tiket #${idVal} sudah terdaftar! Apakah Anda ingin menimpa/mengganti data tersebut?`,
+          );
+          if (!confirmOverwrite) return;
+        }
+
+        let costVal = 0;
+        if (typeVal === "Sepedah") costVal = 5000;
+        else if (typeVal === "Mobil") costVal = 10000;
+
+        const entry = {
+          id: idVal,
+          type: typeVal,
+          plateFront: pFront,
+          plateNum: pNum,
+          plateBack: pBack,
+          person: personVal,
+          helmet: helmetVal,
+          cost: costVal,
+          exitStatus: existingItem ? existingItem.exitStatus : "NONE",
+          timestamp: new Date().toISOString(),
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const docRef = doc(db, "futsal_data", "participants");
+        try {
+          await setDoc(doc(db, currentSelectedDate, String(idVal)), entry);
+          playAudioNotif("SUCCESS");
+          showToast(`Tiket #${idVal} Berhasil Disimpan!`);
+          resetFormMode();
+        } catch (err) {
+          alert("Gagal simpan ke Firebase: " + err.message);
+        }
+      };
 
-        let participantsList = [];
+      // FITUR EDIT: MASUKKAN DATA KE FORM
+      window.editData = function (id) {
+        const item = parkingData.find((d) => Number(d.id) === Number(id));
+        if (!item) return;
 
-        // DATA LENGKAP 258 PESERTA
-        const fullExcelData = [
-          {"id": "p_1", "name": "Milano Ezar Narendra", "school": "MAN 2 Kota Kediri", "phone": "085174341080", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_2", "name": "Muhammad David Briand Irsyad", "school": "SMKN1 Kota Kediri", "phone": "085825208888", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_3", "name": "GASTONI VIKYAN WIDA SAPUTRA", "school": "SMAN 1 NGADILUWIH", "phone": "085123736141", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_4", "name": "Mohammad Dzikra Alfaathaya", "school": "MAN 1 kota Kediri", "phone": "085258825176", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_5", "name": "Bagaswara laksana prabu", "school": "Sman1ngadiluwih", "phone": "085852843525", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_6", "name": "BILLY NILA HERMAWAN", "school": "SMPN 1 Kandangan", "phone": "083846954697", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_7", "name": "DWI CAHYONO", "school": "SMKN 1 NGASEM", "phone": "085708453466", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_8", "name": "ILHAM MAULANA GHIFARI", "school": "MAN 3 KEDIRI", "phone": "082139063498", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_9", "name": "marvel wahyu permana", "school": "SMKN 1 KOTA KEDIRI", "phone": "081944604810", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_10", "name": "Davin Aditya", "school": "MTS ARRAHMAH", "phone": "085607858064", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_11", "name": "ALIF AJIB BAYHAQI", "school": "MAN 3 KEDIRI", "phone": "081515720649", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_12", "name": "Marcel Wahyu Perdana", "school": "SMK NEGERI 1 KEDIRI", "phone": "089514239797", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_13", "name": "AHMAD KHOIRUL RISKI", "school": "SMKN 1 GROGOL", "phone": "081330639025", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_14", "name": "NAUFAL AMMAR ZULFAN", "school": "SMAN 7 KEDIRI", "phone": "081515815958", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_15", "name": "DAVIN ADITYA", "school": "MTS ARRAHMAH", "phone": "085607858064", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_16", "name": "MUHAMMAD BADRUDIN", "school": "SMAN 1 PLEMAHAN", "phone": "085707361049", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_17", "name": "FRAHESA SAKA SAMUDERA", "school": "MAN 2 KOTA KEDIRI", "phone": "085706516624", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_18", "name": "YONATAN ALVIANO", "school": "SMAN 1 PLEMAHAN", "phone": "08139246758", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_19", "name": "ZADA JANUAR PUTRA", "school": "SMKN 1 NGASEM", "phone": "087830090638", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_20", "name": "WILDAN FATHURROHMAN", "school": "SMAN 1 GURAH", "phone": "081217638629", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_21", "name": "MOHAMMAD DAMAR JAGADDITA", "school": "SMAN 1 Kota Kediri", "phone": "082334051475", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_22", "name": "DJENAR SATRIA PRABANGSA", "school": "SMKN 1 KOTA KEDIRI", "phone": "085859842778", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_23", "name": "MUHAMMAD FAKHRI MAULANA", "school": "SMAN 2 PARE", "phone": "085784259002", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_24", "name": "SULTAN ZAJY", "school": "SMKN 1 SEMEN", "phone": "085136006841", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_25", "name": "Rolan hendar rachman", "school": "SMAN1GROGOL", "phone": "081993315235", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_26", "name": "VINO NAUFAL ANTONY", "school": "SMKN 1 KOTA KEDIRI", "phone": "085852626251", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_27", "name": "FAHAD AL ZAMZAMI", "school": "SMAN 1 NGADILUWIH", "phone": "085704909948", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_28", "name": "VINO NAUFAL ANTONY", "school": "SMKN 1 KOTA KEDIRI", "phone": "085852626251", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_29", "name": "AQIEL DANISH WALDAN MAURIST", "school": "SMPN 1 WATES", "phone": "085857124902", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_30", "name": "M.DINESH AREZA", "school": "SMAN 1 PLEMAHAN", "phone": "085708363459", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_31", "name": "YUAN ALVIANO PAMUNGKAS", "school": "SMAN 2 PARE", "phone": "087866720346", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_32", "name": "KAYTA ALKAUTSAR PUTRA MAULANA", "school": "SMAN 1 PARE", "phone": "081216459272", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_33", "name": "RAYHAN SYARIF AL WAHAB", "school": "SMKN 1 KEDIRI", "phone": "082330562225", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_34", "name": "RAYHAN SYARIF AL WAHAB", "school": "SMKN 1 KEDIRI", "phone": "082330562225", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_35", "name": "Bintang Liga Beryl Aditama", "school": "SMK Negeri 1 Kota Kediri", "phone": "082331641207", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_36", "name": "ADI CHANDRA PRASISTA", "school": "SMAN 1 PAPAR", "phone": "08818144268", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_37", "name": "ADI CHANDRA PRASISTA", "school": "SMAN 1 PAPAR", "phone": "08818144268", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_38", "name": "Mochamad Faza Fatihul Izza", "school": "SMAN 1 Pare", "phone": "085856951998", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_39", "name": "TANJAK RISQI WIBOWO", "school": "SMAN 8 KOTA KEDIRI", "phone": "0881036726252", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_40", "name": "AHMAD NAURIL FAIZIN", "school": "SMAN 1 PLEMAHAN", "phone": "085185975718", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_41", "name": "Nakhla Tirta Mahanipuna", "school": "SMPN 2 PARE", "phone": "081229763031", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_42", "name": "ALIFIAN RIZKY GILANG PRAYOGA", "school": "MTS ARRAHMAH", "phone": "085646834140", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_43", "name": "ROHID CHAMADA LUAYYIDDAQIQI", "school": "MAN 2 KAB.KEDIRI", "phone": "085704073119", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_44", "name": "ABRISAM YANUAR AYMAN", "school": "SMAN 1 PLEMAHAN", "phone": "085813414024", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_45", "name": "ADIKA DINARTHA CAKRANEGARA", "school": "SMAN 1 PARE", "phone": "082337120300", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_46", "name": "ABRISAM YANUAR AYMAN", "school": "SMAN 1 PLEMAHAN", "phone": "085813414024", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_47", "name": "Ozil Krisna pratama", "school": "Sman 6", "phone": "085646694625", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_48", "name": "ARSAVIN ANDRA PRATAMA", "school": "SMA NEGERI 1 PLEMAHAN", "phone": "085707166012", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_49", "name": "WIJDAAN ABIYASA SATYA NAGARA", "school": "MAN 4 KEDIRI", "phone": "085731254164", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_50", "name": "DHAMAR GAYUH NUGROHO", "school": "SMAN 1 PUNCU", "phone": "085655713382", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_51", "name": "DHAMAR GAYUH NUGROHO", "school": "SMAN 1 PUNCU", "phone": "085655714382", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_52", "name": "MUHAMMAD AZZAKY KEISHA PRATAMA", "school": "SMPN 1 GROGOL", "phone": "085649759598", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_53", "name": "ahmad nauril faizin", "school": "sman 1 plemahan", "phone": "085185975718", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_54", "name": "Prananda aditya", "school": "SMAN 1 PAPAR", "phone": "085604891589", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_55", "name": "RIZAL WILDAN KAMILIN", "school": "SMK PGRI 1", "phone": "085810875672", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_56", "name": "MUHAMMAD NUR HASAN", "school": "SMAN 1 NGADILUWIH", "phone": "085708077563", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_57", "name": "Ade Bagus Rohmad Hadi", "school": "SMA NEGERI 1 TALUN", "phone": "085655567602", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_58", "name": "AJI PRASETYO", "school": "SMAN 1 PUNCU", "phone": "082134264386", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_59", "name": "SALVERIO AXEL FERDIAN PRASETYA", "school": "SMPN 1 GROGOL", "phone": "085215227238", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_60", "name": "RAEHAN OKTA SAPUTRA", "school": "SMAN 6 KOTA KEDIRI", "phone": "085770733563", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_61", "name": "MUHAMMAD ADLY RAMADAN", "school": "MTS NEGERI 1 KEDIRI", "phone": "082333477873", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_62", "name": "RAFKA ROMEODIAN PUTRA", "school": "MAN 3 KEDIRI", "phone": "085852701127", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_63", "name": "RAFKA ROMEODIAN PUTRA", "school": "MAN 3 KEDIRI", "phone": "085852701127", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_64", "name": "MUHAMMAD FAKHRI MAULANA", "school": "SMAN 2 PARE", "phone": "085784259002", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_65", "name": "Kenzie Mahatma Wistara Dharma", "school": "SMAN 1 GROGOL", "phone": "085941342188", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_66", "name": "MUHAMMAD FARDAN HABIBI", "school": "SMAN 1 KANDAT", "phone": "082143353017", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_67", "name": "Vernanda Dwi Febriansyah", "school": "SMA NEGERI 1 KANDAT", "phone": "081233403618", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_68", "name": "Fadhil Farhan Al Faruq", "school": "MAN 2 KOTA KEDIRI", "phone": "087880130836", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_69", "name": "ROHID CHAMADA LUAYYIDDAQIQI", "school": "MAN 2 KAB.KEDIRI", "phone": "085704073119", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_70", "name": "ZIDAN HASYIM", "school": "MAN 2 KAB.KEDIRI", "phone": "085850151538", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_71", "name": "MOH FARID", "school": "SMAN 8 KEDIRI", "phone": "085655846115", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_72", "name": "REZA LEXIS ADITIYA", "school": "SMK PGRI KASEMBON", "phone": "08133160307", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_73", "name": "JANUAR FREDI RADITYA", "school": "SMKN 1 NGASEM", "phone": "087866721384", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_74", "name": "MOCHAMMAD RIZKY AGUNG RADITYA", "school": "SMAN 1 KANDAT", "phone": "082132765847", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_75", "name": "MOCHAMMAD RIZKY AGUNG RADITYA", "school": "SMAN 1 KANDAT", "phone": "082132765847", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_76", "name": "JIBRIL AKBAR AURELIO ALI", "school": "SMA NEGERI 2 Kota Kediri", "phone": "082257562170", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_77", "name": "M. RAKA MANDALA PUTRA", "school": "SMAN 1 PURWOASRI", "phone": "#ERROR!", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_78", "name": "Sakti Agil Erno Sweke", "school": "SMK PGRI 1 Kediri", "phone": "085806035687", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_79", "name": "SULTAN ZAKY", "school": "SMKN 1 SEMEN", "phone": "085136006841", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_80", "name": "Ramadhani wynestio ragiel", "school": "Smpn 1 kota kediri", "phone": "085607773050", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_81", "name": "OCNIEL BEFAN ALERGA", "school": "SMKN 1 KOTA KEDIRI", "phone": "085804714088", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_82", "name": "ADITYA JUNIAN PRATAMA", "school": "SMKN 1 KEDIRI", "phone": "085732069385", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_83", "name": "Adrian Cahya Ramadhan", "school": "SMAN 6 KOTA KEDIRI", "phone": "085648346595", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_84", "name": "AQIL NAUFAL HISYAM", "school": "SMAN 8 KOTA KEDIRI", "phone": "085123023806", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_85", "name": "Muhammad Ziffano Assyaqif", "school": "SMAN 1 PLOSOKLATEN", "phone": "085745561015", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_86", "name": "ALIKA PUTRA SADIKIN", "school": "SMA DHARMA WANITA 1 PARE", "phone": "081357903293", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_87", "name": "GEOCY AURUM ATMOSFERO", "school": "SMAN 2 PARE", "phone": "083839238050", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_88", "name": "JUNANDA SALMAN ALFARISI", "school": "SMP Muhammadiyah 1 pare", "phone": "089530470622", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_89", "name": "HEMI PRAMUDIA", "school": "SMAN 7 KOTA KEDIRI", "phone": "087775706074", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_90", "name": "Eka Rafa nasrulloh", "school": "SMKN 1 NGASEM", "phone": "082229681839", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_91", "name": "Muhammad Reyhan Setiawan", "school": "SMK YP 17 PARE", "phone": "082141665986", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_92", "name": "ATYANTA PRAMUDITA AGNY PUTRA", "school": "SMKN 1 NGASEM KAB.KEDIRI", "phone": "081284510180", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_93", "name": "Agung sadha dharmawansa", "school": "SMKN 1 NGASEM", "phone": "085947580981", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_94", "name": "RENGGA RIANDRA YUDHAA PRAWIRA", "school": "SMK PEMBANGUNAN", "phone": "085746586841", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_95", "name": "yoga alfan febyan dana", "school": "SMK PEMBANGUNAN", "phone": "081232838136", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_96", "name": "REYSYA GALANG RAMADHANI", "school": "SMK PEMBANGUNAN KANDANGAN", "phone": "085655637394", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_97", "name": "M.YUSYA RIZALDI AIRLANGGA", "school": "SMKS PEMBANGUNAN", "phone": "085855074622", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_98", "name": "Aldi Khairul Fahmi", "school": "SMPN 1 PLEMAHAN", "phone": "085141152362", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_99", "name": "MUHAMMAD SULTONUDIN ASOBAIR", "school": "SMKN 1 KOTA KEDIRI", "phone": "085704074618", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_100", "name": "Rolan hendar rachman", "school": "SMAN 1 GROGOL", "phone": "081993315235", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_101", "name": "Thomas Aldi prayoga", "school": "SMK pembangunan", "phone": "085856441239", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_102", "name": "Maulana Al Fariz", "school": "SMPN 4 PARE", "phone": "085850942254", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_103", "name": "RAFFI CRISTIAN MAULANA", "school": "SMAN 1 PLEMAHAN", "phone": "081953002817", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_104", "name": "VASANTA KUSUMAKARA", "school": "SMAN 1 PAPAR", "phone": "083151065298", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_105", "name": "ALVINO", "school": "SMA NEGRI 1 PAPAR", "phone": "081548725910", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_106", "name": "MOHAMMAD RAZZAQ", "school": "SMA NEGRI 1 KANDANGAN", "phone": "085604872931", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_107", "name": "ROY NANDO DAFA HENDRY WIJAYA", "school": "SMAN 1 KANDANGAN", "phone": "085715302114", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_108", "name": "MUH.APRILLIANO VICKY DAVANDARU", "school": "SMAN7 KEDIRI", "phone": "08113333901", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_109", "name": "Moch. Syahril Valen Zakaria", "school": "SMKK BHAKTI WIYATA", "phone": "087814552864", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_110", "name": "panji aryo gumilang", "school": "SMAN 1 KANDANGAN", "phone": "085785106309", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_111", "name": "FINO AHMED ALONSO", "school": "SMAN 1 MOJO", "phone": "085808715155", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_112", "name": "ARGA CANDRA WIJAYA", "school": "SMAN 1 MOJO", "phone": "08155068160", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_113", "name": "KAFKA NAFISA ALFARISI", "school": "SMPN 2 PARE", "phone": "085854739640", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_114", "name": "Bagas Setiawan", "school": "SMAN 1 MOJO", "phone": "085854667084", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_115", "name": "REZHA NURDIANSYAH", "school": "SMKS PEMUDA PAPAR", "phone": "085755975128", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_116", "name": "ANJALI HABIBI MUHAMMAD", "school": "SMK KARTANEGARA WATES", "phone": "085736932274", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_117", "name": "Kamal Indra Firdaus", "school": "SMKN 1 Kediri", "phone": "082245682584", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_118", "name": "M. RAKA MANDALA PUTRA", "school": "SMAN 1 PURWOASRI", "phone": "#ERROR!", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_119", "name": "MOCH HILMI DIKI WAHYUDI", "school": "SMK PEMBANGUNAN KANDANGAN", "phone": "085785833568", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_120", "name": "Suryo Anggoro Putro", "school": "SMK TI PELITA NUSANTARA KEDIRI", "phone": "085731396422", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_121", "name": "FIRZAN ALKA NURIZAN", "school": "SMK PGRI 1 KOTA KEDIRI", "phone": "08138795413", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_122", "name": "Faturrochman al azizi", "school": "SMAN 1 PARE", "phone": "085755381936", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_123", "name": "Faturrochman al azizi", "school": "SMAN 1 PARE", "phone": "085755381936", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_124", "name": "MISBACH MAULIDIR RAYHAN", "school": "SMKN 1 KOTA KEDIRI", "phone": "085784675772", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_125", "name": "ALLANDI ADE FEBIAWAN", "school": "SMAN 1 PARE", "phone": "082228021406", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_126", "name": "Milano Ezar Narendra", "school": "MAN 2 Kota Kediri", "phone": "085174341080", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_127", "name": "FADHIL ADIKA WIDANA", "school": "SMKN 1 PLOSOKLATEN", "phone": "085854651447", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_128", "name": "DIMAS SATRIA WINATA", "school": "SMA NEGERI 1 GURAH", "phone": "082231124792", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_129", "name": "M.Rafa Al FARIZA PUTRA ARIYA", "school": "SMK ARRAHMAH", "phone": "085790676803", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_130", "name": "MARCHIANTON MAHAR CAHYA PAMUNGKAS", "school": "SMA MUHAMMADIYAH 1 CILACAP", "phone": "088215590164", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_131", "name": "DAVID MAGAI", "school": "SMP GERGAJI", "phone": "082181511325", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_132", "name": "DAVID MAGAI", "school": "SMP GERGAJI", "phone": "082181511325", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_133", "name": "MAULANA AL FARIZ", "school": "SMPN 4 PARE", "phone": "085850942254", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_134", "name": "GESANG KERTOJOYO", "school": "SMK ISLAM KUNJANG", "phone": "08133722514", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_135", "name": "Alvianza eka triwahyu ramadhani", "school": "smpn 2 puncu", "phone": "082135880477", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_136", "name": "MOH.RAFA ALMUGHITS FIRMANTO", "school": "SMAN 3 KOTA KEDIRI", "phone": "085852237030", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_137", "name": "Ahmad syifaul ibad", "school": "SMAN 1 Kandangan", "phone": "085604463930", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_138", "name": "ASYRAF AULIA DAVA EL GHIFAREL", "school": "SMPN 2 PARE", "phone": "085850056572", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_139", "name": "ASYRAF AULIA DAVA EL GHIFAREL", "school": "SMPN 2 PARE", "phone": "085850056572", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_140", "name": "ASYRAF AULIA DAVA EL GHIFAREL", "school": "SMPN 2 PARE", "phone": "085850056572", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_141", "name": "Muhammad Ghozi Al Fahrizi", "school": "SMAN 1 KANDAT", "phone": "087744452833", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_142", "name": "Marcellino permana putra", "school": "SMAN 1 KANDAT", "phone": "085936153525", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_143", "name": "Dhimas satya utama", "school": "smk bhakta wiyata", "phone": "085731593677", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_144", "name": "SATRIYA BIMA PRAWIRA", "school": "SMKN1PLOSOKLATEN", "phone": "085823163702", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_145", "name": "Mukhammad Ibra Al-Faizi", "school": "SMAN 4 KOTA KEDIRI", "phone": "081459022369", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_146", "name": "Muhammad Bintara Marchven Gunawan", "school": "MAN 1 Kota Kediri", "phone": "085704450910", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_147", "name": "Krishna Raditya Azhar", "school": "Man 1 Kota Kediri", "phone": "08155901228", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_148", "name": "MUHAMMAD GILANG KUSUMA", "school": "MAN 2 KOTA KEDIRI", "phone": "081282889851", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_149", "name": "Gadis Auryn Neva", "school": "SMKN 1 PLOSOKLATEN", "phone": "08135959119", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_150", "name": "RIZKY MAHA PUTRO", "school": "SMA DHARMA WANITA 1 PARE", "phone": "081249983913", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_151", "name": "RIZKY MAHA PUTRO", "school": "SMA DHARMA WANITA 1 PARE", "phone": "081249983913", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_152", "name": "ROHMAD BAYU SANTOSO", "school": "SMA DHARMA WANITA 1 PARE", "phone": "085648806675", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_153", "name": "JULIAN TRIANDA SYACHPUTRA", "school": "SMA NEGERI 1 PUNCU", "phone": "082333825107", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_154", "name": "Muhtarom Fahri Fahrozi", "school": "SMAN 1 GURAH", "phone": "082172402940", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_155", "name": "Egi dwi ardiansyah", "school": "MTSN 6KEDIRI", "phone": "082245172843", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_156", "name": "BENEDIKTUS FERNANDO", "school": "SMPN 2 PUNCU", "phone": "087840203640", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_157", "name": "ANDIKA DWI PRAYOGA", "school": "SMK AR-RAHMAH", "phone": "081615939149", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_158", "name": "Daffa Aufar Hasbi", "school": "SMAN 3 KOTA KEDIRI", "phone": "082143352432", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_159", "name": "Fiqhi ahmad Abdillah", "school": "SMAN 1 PAPAR", "phone": "0895711539993", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_160", "name": "DIAZ WIRABUANA MAKSUM", "school": "SMA NEGERI 1 KANDAT", "phone": "085608702937", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_161", "name": "ALDI WAHYU SAPUTRA", "school": "MAN4KEDIRI", "phone": "085746486351", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_162", "name": "DIAZ WIRABUANA MAKSUM", "school": "SMA NEGERI KANDAT 1", "phone": "085608702937", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_163", "name": "AWALI FAJAR IRSYADUDDIN", "school": "SMAN 1 KANDAT", "phone": "085707240187", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_164", "name": "ROHKMAD HARI WIBOWO", "school": "SMA DHARMA WANITA 1 PARE", "phone": "#ERROR!", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_165", "name": "ROHMAD BAYU SANTOSO", "school": "SMA DHARMA WANITA 1 PARE", "phone": "#ERROR!", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_166", "name": "AISYAH CANRANINGTAS", "school": "SMKN 1 PLOSOKLATEN", "phone": "085878082046", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_167", "name": "Reza Lexis aditiya", "school": "SMK PGRI KASEMBON", "phone": "08133160307", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_168", "name": "HAIKAL ALIF FIRMANSYAH", "school": "SMAN 1 PLEMAHAN", "phone": "085856545632", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_169", "name": "MOH FADLI AL-HUSAIN ARVIANATA", "school": "SMK AL HUDA", "phone": "085735829731", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_170", "name": "Ananda Cahya Pratama putra", "school": "SMK PGRI 1 Kediri", "phone": "085786156695", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_171", "name": "Alexandro Farrelio Arbi Trisulo", "school": "SMAN 1 Pare", "phone": "082229962565", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_172", "name": "MOHAMMAD RIDHO PAMUNGKAS", "school": "SMAN 1 MOJO", "phone": "081330282461", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_173", "name": "RAFA AKHWAN SANI", "school": "SMAN 1 PARE", "phone": "081252496255", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_174", "name": "RISKY FASA RAMADHAN", "school": "SMKN 1 NGASEM", "phone": "085806746165", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_175", "name": "Mohammad Fariel Firdaus", "school": "SMAN 4 KEDIRI", "phone": "085735830309", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_176", "name": "Darrel Raditya Gantari Putra Pradana", "school": "MAN 4 KEDIRI", "phone": "085648630944", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_177", "name": "mario sakti pamungkass", "school": "SMA1 Plemahan", "phone": "085604274458", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_178", "name": "MOHAMMAD YAFIS IVAN NABITA", "school": "SMAN I PLEMAHAN", "phone": "085857190212", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_179", "name": "Josheep Valentino Kurnia Putra Ngara", "school": "SMAN 1 GURAH", "phone": "087849707769", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_180", "name": "Syafi' sadidaturrahman", "school": "SMA 1 PARE", "phone": "#ERROR!", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_181", "name": "Faturrochman al azizi", "school": "SMAN 1 PARE", "phone": "085755281936", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_182", "name": "M.ASROR ALI MA'RUF", "school": "SMK PGRI 1 KOTA KEDIRI", "phone": "0895385285883", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_183", "name": "HAFIZ PRASETYA", "school": "SMKN 1 PLOSOKLATEN", "phone": "083168081575", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_184", "name": "ANDITA RANGGA PRATAMA", "school": "SMKN 1 PLOSOKLATEN", "phone": "085850964859", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_185", "name": "KRISBIAN ARIA APRILIO", "school": "SMKN 1 PLOSOKLATEN", "phone": "085607477363", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_186", "name": "M.afiq Madani kaisar", "school": "Man 3 Blitar", "phone": "085745320397", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_187", "name": "M IRKHAM TAHTA ALFINO SALIM", "school": "Man 3 blitar", "phone": "96627938", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_188", "name": "Ezra lintang tetuko", "school": "SMKN 1 PLOSOKLATEN", "phone": "081997508546", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_189", "name": "Ferdy Pratama", "school": "SMKN 1 Ngasem", "phone": "081216571069", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_190", "name": "muhammad aufaa habibi alfaza", "school": "smp muhammadiyah 1 pare", "phone": "085707768617", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_191", "name": "RINGGA TARIKSA YOSELIN", "school": "SMAN 1 PLEMAHAN", "phone": "085648530353", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_192", "name": "WAHYUISA TRYSANCA", "school": "SMAN 6 KEDIRI", "phone": "085236711173", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_193", "name": "AHMAD HAZIQ WAHYUDI", "school": "SMAN 1 KANDANGAN", "phone": "081249201141", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_194", "name": "AHMAD IBRAHIM MOFID", "school": "SMA NEGERI 1 KANDANGAN", "phone": "085745526941", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_195", "name": "MUHAMMAD REFAN KHOIRUL HUDA", "school": "MTSn 1 kediri", "phone": "085725065019", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_196", "name": "CHOIRINAS YUDISTIA MAULANA AKBAR", "school": "SMAN 1 KANDANGAN", "phone": "085730745706", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_197", "name": "Handika feri kurniawan", "school": "SMAN 1purwoasri", "phone": "082232122987", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_198", "name": "BAIHAQI KHAIZAN", "school": "SMAN 1 PARE", "phone": "082143360411", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_199", "name": "Muhammad Syaifun Nadif", "school": "SMAN 1 SRENGAT", "phone": "08133057504", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_200", "name": "M.FALIH AL AZKA", "school": "SMA MUH 7 YK", "phone": "088991806084", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_201", "name": "radhitya agastha putra arandri", "school": "sman 1 pare", "phone": "082245806151", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_202", "name": "REIZHANTA ZEFANYA CHRISTOVERA", "school": "SMAN 1 GROGOL", "phone": "082292557683", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_203", "name": "AHMAD MUSTOFA", "school": "SMK CANDA BHIRAWA", "phone": "085706007565", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_204", "name": "TEGAR SATRIO PAMBUDI", "school": "MAN 3 KEDIRI", "phone": "087778289076", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_205", "name": "MUHAMMAD RIZAL ALVASANO", "school": "MAN 1 KOTA KEDIRI", "phone": "085785800742", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_206", "name": "Samsul hadi", "school": "Ma Ma'arif Udanawu", "phone": "085856985507", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_207", "name": "MOHAMMAD FARIEL FIRDAUS", "school": "SMAN 4 KEDIRI", "phone": "085735830309", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_208", "name": "NAFIS WIRAATMAJA PRABA LAKSONO", "school": "SMA NEGERI 1 PARE", "phone": "087848924551", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_209", "name": "SATRIA AGHA HAMIZAN IFTIKHAR", "school": "SMAN 1 PARE", "phone": "085857585739", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_210", "name": "MOCH HILMI DIKI WAHYUDI", "school": "SMK PEMBANGUNAN KANDANGAN", "phone": "085785833568", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_211", "name": "AZRIL ERVALNHO HIDAYAT", "school": "MAN 2 KEDIRI", "phone": "083116007796", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_212", "name": "Muhamad Victor Ardiansyah", "school": "SMAN 1GURAH", "phone": "085731480852", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_213", "name": "MUHAMMAD ILMAN ZUHRI ZULQARNAIN", "school": "MAN 4 KEDIRI", "phone": "085790656812", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_214", "name": "Ibrahim Putra Rivandika", "school": "SMK Budi Utomo Jombang", "phone": "083160770378", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_215", "name": "FABYAN ACHMAD AZIZI", "school": "SMAN 1 PARE", "phone": "085812420836", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_216", "name": "RAKA BAGAS PAKUSADEWA", "school": "SMA NEGERI 1 PARE", "phone": "085707281107", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_217", "name": "DANISH DANIAL HERYA LAKSANA", "school": "SMAN 1 PARE", "phone": "085755943155", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_218", "name": "ALFAZRI KEVINZIO GYBRAND", "school": "SMPN 2 KEPUNG", "phone": "-", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_219", "name": "RAMDHAN FADHILLAH PRAWIRA", "school": "SMPN 4 PARE", "phone": "085604076028", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_220", "name": "NAGATTA KENZHA MARDIANSYAH", "school": "SMPN 4 Pare", "phone": "085861291486", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_221", "name": "M. Alif Fauzi Abdillah", "school": "SMK YP 17 PARE", "phone": "087711084503", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_222", "name": "Rizky Nur Hidayat", "school": "SMK YP 17 PARE", "phone": "087745523306", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_223", "name": "Rizky Nur Hidayat", "school": "SMK YP 17 PARE", "phone": "087745523306", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_224", "name": "FAREL KENZZO PRADEVTA", "school": "SMPN 4 PARE", "phone": "081216556992", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_225", "name": "Mohamad arif", "school": "SMKN 1Plosoklaten", "phone": "085655847408", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_226", "name": "MOHAMAD ARIF", "school": "SMKN 1 PLOSOKLATEN", "phone": "085655847408", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_227", "name": "Alfathan Julio Putra Wahyudi", "school": "SMAN 1 PARE", "phone": "0881036483488", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_228", "name": "AHMAD MUSTOFA", "school": "SMK CANDA BHIRAWA", "phone": "085706007565", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_229", "name": "MUHAMMAD FADLIL VALENTINO", "school": "SMK BHATI MULIA PARE", "phone": "085746482367", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_230", "name": "MUHAMMAD FADLIL VALENTINO", "school": "SMK BHATI MULIA PARE", "phone": "085746482367", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_231", "name": "ROLAN HENDAR RACHMAN", "school": "SMAN 1 GROGOL", "phone": "081993315235", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_232", "name": "RAYHAN SYARIF AL WAHAB", "school": "SMKN 1 KEDIRI", "phone": "082330562225", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_233", "name": "Adi Chandra Prasista", "school": "Sman 1 papar", "phone": "08818144268", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_234", "name": "Ahmad Farhan Halan Kusuma", "school": "SMA NEGERI 2 PARE", "phone": "081252892817", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_235", "name": "MOH FARID", "school": "SMAN 8 KEDIRI", "phone": "085655846115", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_236", "name": "Reno Argiawan Sonny Abdillah", "school": "SMAN 1 PURWOASRI", "phone": "082257489105", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_237", "name": "LUKMANUL HAKIM M.A", "school": "SMK CANDA BHIRAWA", "phone": "085743512951", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_238", "name": "TUMENGGUNG SYAH PAHLEVI", "school": "SMKS KARTANEGARA WATES", "phone": "081232022355", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_239", "name": "TITIS WIKA PUTRA", "school": "SMK 17 PARE", "phone": "085865161498", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_240", "name": "AHMAD DICKY ERFIANDI", "school": "SMAN 1 GURAH", "phone": "085850168875", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_241", "name": "M.ulil Fauzi", "school": "SMK yp 17 pare", "phone": "082257280274", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_242", "name": "M.ulil Fauzi", "school": "SMK yp 17 pare", "phone": "082257280274", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_243", "name": "Reyndra Wisnu Wardana", "school": "SMKN 2 Kota Kediri", "phone": "085736674052", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_244", "name": "PRAVASVARA BENTAR RAMPODIKA", "school": "SMK CANDA BHIRAWA", "phone": "085733532017", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_245", "name": "REZA MAULANA", "school": "SMK CANDA BHIRAWA PARE", "phone": "085730678900", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_246", "name": "FRENNO VEDAT FANDOYO PRATAMA", "school": "MAN 1 KOTA KEDIRI", "phone": "081234367444", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_247", "name": "Muhammad Ridwan", "school": "SMAN 1 GURAH", "phone": "085730030972", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_248", "name": "FLAVIO FARHAN NUGROHO", "school": "SMAN 1 WATES", "phone": "085706346322", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_249", "name": "Syirif alsunan", "school": "SMPN 1 PELEMAHAN", "phone": "082141604038", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_250", "name": "Axcelino joan syah putra", "school": "MAN 1 KOTA KEDIRI", "phone": "087727736640", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_251", "name": "yeftaa rikbal Agus pratama", "school": "SMP negri 4 pare", "phone": "08951704586", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_252", "name": "Fawwas Akbar Azaidan", "school": "SMAN 1 GURAH", "phone": "082115843263", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_253", "name": "ACHMAD HILDAN PRIANSYAH", "school": "SMKN 1 KOTA KEDIRI", "phone": "087822419071", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_254", "name": "Ahmad faza fanani", "school": "Sman 1 pare", "phone": "085602810251", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_255", "name": "Aufa Denis", "school": "-", "phone": "-", "position": "Pivot", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_256", "name": "Rifka dwi irawan", "school": "-", "phone": "-", "position": "Anchor", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_257", "name": "Muhammad dafif daris", "school": "-", "phone": "-", "position": "GK", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""},
-          {"id": "p_258", "name": "Raehan Okta", "school": "-", "phone": "-", "position": "Flank", "present": false, "foot": "Right", "club": "", "starred": false, "passed": false, "notes": ""}
-        ];
+        document.getElementById("form-id").value = item.id;
+        document.getElementById("form-id").readOnly = true; // Kunci ID saat edit
+        document
+          .getElementById("form-id")
+          .classList.add("bg-slate-900", "text-slate-500");
+        document.getElementById("form-type").value = item.type;
+        document.getElementById("form-plate-front").value = item.plateFront;
+        document.getElementById("form-plate-num").value = item.plateNum;
+        document.getElementById("form-plate-back").value = item.plateBack;
+        document.getElementById("form-person").value = item.person;
+        document.getElementById("form-helmet").value = item.helmet;
 
-        // Tombol Inject 258 Data ke Firebase
-        document.getElementById("btn-inject-data").onclick = async () => {
-            if (!confirm("Apakah Anda yakin ingin menyuntikkan SEMUA 258 data lengkap ke Firebase?")) return;
-            try {
-                await setDoc(docRef, { list: fullExcelData });
-                alert("✅ Berhasil! Semua 258 data peserta berhasil masuk ke Firebase.");
-                loadData();
-            } catch (err) {
-                console.error(err);
-                alert("Gagal mengunggah data: " + err.message);
+        document.getElementById("form-title.innerHTML"); // Ubah judul form
+        document.getElementById("form-title").innerHTML =
+          `<i class="fa-solid fa-pen-to-square text-amber-400"></i> EDIT TIKET #${item.id}`;
+        document.getElementById("btn-submit").textContent = "Perbarui Data";
+        document.getElementById("btn-submit").className =
+          "w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg transition";
+        document.getElementById("btn-cancel-edit").classList.remove("hidden");
+
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      window.resetFormMode = function () {
+        document.getElementById("form-parking").reset();
+        document.getElementById("form-id").readOnly = false;
+        document
+          .getElementById("form-id")
+          .classList.remove("bg-slate-900", "text-slate-500");
+        document.getElementById("form-title").innerHTML =
+          `<i class="fa-solid fa-circle-plus text-teal-400"></i> INPUT PARKIR MASUK`;
+        document.getElementById("btn-submit").textContent =
+          "Simpan ke Firebase";
+        document.getElementById("btn-submit").className =
+          "w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-teal-600/30 text-sm transition";
+        document.getElementById("btn-cancel-edit").classList.add("hidden");
+      };
+
+      // FITUR HAPUS DATA
+      window.deleteData = async function (id) {
+        const confirmDel = confirm(
+          `Apakah Anda yakin ingin menghapus Tiket #${id}?`,
+        );
+        if (!confirmDel) return;
+
+        try {
+          await deleteDoc(doc(db, currentSelectedDate, String(id)));
+          showToast(`Tiket #${id} Berhasil Dihapus!`);
+          playAudioNotif("WARNING");
+        } catch (err) {
+          alert("Gagal menghapus data: " + err.message);
+        }
+      };
+
+      window.updateExitStatus = async function (id, newStatus) {
+        try {
+          await updateDoc(doc(db, currentSelectedDate, String(id)), {
+            exitStatus: newStatus,
+          });
+
+          if (newStatus === "SESUAI") playAudioNotif("VERIFY");
+          else if (newStatus === "TIDAK_SESUAI") playAudioNotif("WARNING");
+
+          setTimeout(() => {
+            const updatedItem = parkingData.find((d) => d.id == id);
+            if (updatedItem) renderVerificationCard(updatedItem);
+          }, 200);
+        } catch (err) {
+          alert("Gagal update status: " + err.message);
+        }
+      };
+
+      window.exportToExcel = function () {
+        if (parkingData.length === 0) {
+          alert("Belum ada data parkir untuk tanggal ini!");
+          return;
+        }
+
+        const excelRows = parkingData.map((item) => ({
+          "No Tiket": item.id,
+          "Jenis Kendaraan": item.type,
+          "Plat Nomor": `${item.plateFront} ${item.plateNum} ${item.plateBack}`,
+          Orang: item.person,
+          Helm: item.helmet,
+          "Tarif (Rp)": item.cost,
+          "Status Keluar":
+            item.exitStatus === "SESUAI"
+              ? "Sesuai (V)"
+              : item.exitStatus === "TIDAK_SESUAI"
+                ? "Tidak Sesuai (X)"
+                : "Masih Parkir",
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(excelRows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, currentSelectedDate);
+        XLSX.writeFile(workbook, `Parkir_AFKAB_${currentSelectedDate}.xlsx`);
+      };
+
+      window.importFromExcel = function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async function (evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+            const sheetName = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+            for (let row of rows) {
+              const ticketId = row["No Tiket"] || row["No"] || row["id"];
+              if (ticketId) {
+                const platParts = (row["Plat Nomor"] || "").split(" ");
+                await setDoc(doc(db, currentSelectedDate, String(ticketId)), {
+                  id: Number(ticketId),
+                  type: row["Jenis Kendaraan"] || "Sepedah",
+                  plateFront: platParts[0] || "AG",
+                  plateNum: platParts[1] || "",
+                  plateBack: platParts[2] || "",
+                  person: Number(row["Orang"] || 1),
+                  helmet: Number(row["Helm"] || 1),
+                  cost: Number(row["Tarif (Rp)"] || 5000),
+                  exitStatus: "NONE",
+                  timestamp: new Date().toISOString(),
+                });
+              }
             }
+            showToast("Data Excel Berhasil Di-import!");
+          } catch (err) {
+            alert("Gagal membaca file Excel: " + err.message);
+          }
         };
+        reader.readAsArrayBuffer(file);
+      };
 
-        async function loadData() {
-            try {
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
-                    participantsList = snap.data().list || [];
-                } else {
-                    participantsList = fullExcelData;
-                    await setDoc(docRef, { list: fullExcelData });
-                }
-                renderTable(participantsList);
-            } catch (e) {
-                console.error(e);
-                participantsList = fullExcelData;
-                renderTable(participantsList);
+      window.applyFilters = function () {
+        const q = document.getElementById("filter-search").value.toLowerCase();
+        const statusFilter = document.getElementById("filter-status").value;
+
+        const filtered = parkingData.filter((item) => {
+          const matchSearch =
+            item.id.toString().includes(q) ||
+            `${item.plateFront}${item.plateNum}${item.plateBack}`
+              .toLowerCase()
+              .includes(q);
+          const matchStatus =
+            statusFilter === "ALL" || item.exitStatus === statusFilter;
+          return matchSearch && matchStatus;
+        });
+
+        renderTable(filtered);
+      };
+
+      function renderTable(data) {
+        const tbody = document.getElementById("table-body-container");
+        if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-500 font-medium">Belum ada data parkir untuk tanggal ini.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data
+          .map((item) => {
+            let badgeHTML = `<span class="bg-amber-950/80 text-amber-300 border border-amber-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Di Parkiran</span>`;
+            if (item.exitStatus === "SESUAI") {
+              badgeHTML = `<span class="bg-emerald-950/80 text-emerald-300 border border-emerald-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Keluar (Sesuai)</span>`;
+            } else if (item.exitStatus === "TIDAK_SESUAI") {
+              badgeHTML = `<span class="bg-rose-950/80 text-rose-300 border border-rose-800/60 text-[10px] font-bold px-2.5 py-1 rounded-md">Tidak Sesuai</span>`;
             }
+
+            return `
+          <tr class="hover:bg-slate-800/50 transition">
+            <td class="py-3 px-2 font-extrabold text-slate-200">#${item.id}</td>
+            <td class="py-3 px-2 font-bold text-slate-300">${item.type}</td>
+            <td class="py-3 px-2 font-black text-slate-100 tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</td>
+            <td class="py-3 px-2 text-center font-bold text-slate-300">${item.person}</td>
+            <td class="py-3 px-2 text-center font-bold text-slate-300">${item.helmet}</td>
+            <td class="py-3 px-2 font-extrabold text-emerald-400">Rp ${Number(item.cost).toLocaleString("id-ID")}</td>
+            <td class="py-3 px-2 text-center">${badgeHTML}</td>
+            <td class="py-3 px-2 text-center space-x-1">
+              <button onclick="selectForVerification(${item.id})" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-2.5 py-1 rounded-lg transition border border-slate-700" title="Cek">Cek</button>
+              <button onclick="editData(${item.id})" class="bg-amber-950 hover:bg-amber-900 text-amber-300 text-[11px] font-bold px-2 py-1 rounded-lg transition border border-amber-800" title="Edit"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deleteData(${item.id})" class="bg-rose-950 hover:bg-rose-900 text-rose-300 text-[11px] font-bold px-2 py-1 rounded-lg transition border border-rose-800" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+          })
+          .join("");
+      }
+
+      window.handleVerificationSearch = function () {
+        const searchId = document.getElementById("verify-id-input").value;
+        if (!searchId) {
+          resetVerification();
+          return;
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById("participant-table-body");
-            document.getElementById("total-counter").innerText = `Total Peserta Terdaftar: ${data.length}`;
-            tbody.innerHTML = "";
+        const item = parkingData.find((d) => d.id == searchId);
+        if (!item) {
+          document.getElementById("verification-result-box").innerHTML = `
+          <div class="text-center text-rose-400 space-y-1">
+            <i class="fa-solid fa-circle-exclamation text-2xl"></i>
+            <p class="text-xs font-bold">Data Tiket #${searchId} Tidak Ditemukan!</p>
+          </div>
+        `;
+          return;
+        }
+        renderVerificationCard(item);
+      };
 
-            data.forEach((p, idx) => {
-                const tr = document.createElement("tr");
-                tr.className = "hover:bg-gray-800/50 transition border-b border-gray-800";
-                tr.innerHTML = `
-                    <td class="p-4 text-gray-400">${idx + 1}</td>
-                    <td class="p-4 font-medium text-white">${p.name}</td>
-                    <td class="p-4 text-gray-300">${p.school}</td>
-                    <td class="p-4 text-gray-300">${p.phone}</td>
-                    <td class="p-4"><span class="bg-gray-800 border border-gray-700 px-2.5 py-1 rounded text-xs font-semibold text-emerald-400">${p.position}</span></td>
-                    <td class="p-4 text-right">
-                        <button onclick="deleteParticipant('${p.id}')" class="text-red-400 hover:text-red-300 text-xs font-medium px-2 py-1 bg-red-950/40 border border-red-900 rounded">Hapus</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+      window.selectForVerification = function (id) {
+        document.getElementById("verify-id-input").value = id;
+        window.handleVerificationSearch();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+
+      function renderVerificationCard(item) {
+        let badgeClass = "bg-amber-950 text-amber-300 border border-amber-800";
+        let statusText = "Masih Parkir";
+        if (item.exitStatus === "SESUAI") {
+          badgeClass =
+            "bg-emerald-950 text-emerald-300 border border-emerald-800";
+          statusText = "Keluar (Sesuai)";
+        } else if (item.exitStatus === "TIDAK_SESUAI") {
+          badgeClass = "bg-rose-950 text-rose-300 border border-rose-800";
+          statusText = "Tidak Sesuai";
         }
 
-        window.deleteParticipant = async function(id) {
-            if (!confirm("Hapus peserta ini?")) return;
-            participantsList = participantsList.filter(p => p.id !== id);
-            await setDoc(docRef, { list: participantsList });
-            renderTable(participantsList);
-        }
+        document.getElementById("verification-result-box").innerHTML = `
+        <div class="w-full space-y-3.5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">NOMOR PARKIR</p>
+              <p class="text-3xl font-black text-slate-100">#${item.id}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[10px] font-bold px-2.5 py-1 rounded-md ${badgeClass}">${statusText}</span>
+              <p class="text-xs font-bold text-slate-400 mt-1">${item.type}</p>
+            </div>
+          </div>
 
-        window.openAddModal = async function() {
-            const name = prompt("Nama Peserta Baru:");
-            if (!name) return;
-            const school = prompt("Asal Sekolah:", "-") || "-";
-            const phone = prompt("No HP:", "-") || "-";
-            const position = prompt("Posisi (GK / Anchor / Flank / Pivot):", "Flank") || "Flank";
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Plat Nomor:</span><span class="font-black text-slate-100 text-sm tracking-wide">${item.plateFront} ${item.plateNum} ${item.plateBack}</span></div>
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Orang:</span><span class="font-bold text-slate-300">${item.person} Orang</span></div>
+            <div class="flex justify-between"><span class="text-slate-400 font-semibold">Jumlah Helm:</span><span class="font-bold text-slate-300">${item.helmet} Helm</span></div>
+            <div class="flex justify-between pt-1 border-t border-slate-800"><span class="text-slate-400 font-semibold">Tarif Parkir:</span><span class="font-black text-emerald-400 text-sm">Rp ${Number(item.cost).toLocaleString("id-ID")}</span></div>
+          </div>
 
-            const newObj = {
-                id: "p_" + (Date.now()),
-                name: name,
-                school: school,
-                phone: phone,
-                position: position,
-                present: false,
-                foot: "Right",
-                club: "",
-                starred: false,
-                passed: false,
-                notes: ""
-            };
+          <div class="pt-2">
+            <p class="text-[10px] font-bold text-slate-400 uppercase text-center mb-2">VERIFIKASI KELUAR PENGUNJUNG:</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="updateExitStatus(${item.id}, 'SESUAI')" class="bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-circle-check"></i> Sesuai
+              </button>
+              <button onclick="updateExitStatus(${item.id}, 'TIDAK_SESUAI')" class="bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-800 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                <i class="fa-solid fa-triangle-exclamation"></i> Tidak Sesuai
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      }
 
-            participantsList.push(newObj);
-            await setDoc(docRef, { list: participantsList });
-            renderTable(participantsList);
-            alert("Peserta baru berhasil ditambahkan!");
-        }
+      window.resetVerification = function () {
+        document.getElementById("verify-id-input").value = "";
+        document.getElementById("verification-result-box").innerHTML = `
+        <div class="text-center text-slate-600 space-y-2">
+          <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
+          <p class="text-xs font-medium">Ketik nomor parkir untuk memeriksa data kendaraan.</p>
+        </div>
+      `;
+      };
 
-        // Search & Filter listeners
-        document.getElementById("search-input").oninput = (e) => filterData();
-        document.getElementById("position-filter").onchange = (e) => filterData();
-
-        function filterData() {
-            const query = document.getElementById("search-input").value.toLowerCase();
-            const pos = document.getElementById("position-filter").value;
-
-            const filtered = participantsList.filter(p => {
-                const matchName = p.name.toLowerCase().includes(query) || p.school.toLowerCase().includes(query);
-                const matchPos = pos === "" || p.position === pos;
-                return matchName && matchPos;
-            });
-            renderTable(filtered);
-        }
-
-        // Inisialisasi awal saat halaman dimuat
-        loadData();
+      setupRealtimeListener();
     </script>
-</body>
+  </body>
 </html>
