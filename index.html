@@ -2,8 +2,9 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Parkir AFKAB - Dark Mode Edition</title>
+  <!-- ANTI-ZOOM DI MOBILE -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Parkir AFKAB - Firebase & Vercel Edition</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,7 +15,7 @@
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen pb-12 selection:bg-teal-500 selection:text-white">
@@ -27,49 +28,49 @@
     </div>
   </div>
 
-  <!-- NOTIFIKASI FLOATING SUKSES -->
-  <div id="success-toast" class="fixed top-5 right-5 z-50 transform translate-y-[-200%] opacity-0 transition-all duration-300 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center space-x-3 border border-emerald-500">
-    <i class="fa-solid fa-circle-check text-xl"></i>
-    <div>
-      <h4 class="font-bold text-xs uppercase tracking-wider">Berhasil!</h4>
-      <p id="toast-message" class="text-xs text-emerald-100">Data parkir berhasil disimpan ke Firebase.</p>
+  <!-- NOTIFIKASI BESAR DI TENGAH LAYAR -->
+  <div id="success-toast" class="fixed inset-0 z-50 pointer-events-none hidden items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-emerald-600 text-white px-8 py-6 rounded-3xl shadow-2xl flex items-center space-x-4 border-2 border-emerald-400 transform scale-75 opacity-0 transition-all duration-300" id="toast-card">
+      <i class="fa-solid fa-circle-check text-4xl text-emerald-100 animate-bounce"></i>
+      <div>
+        <h4 class="font-black text-sm uppercase tracking-wider">BERHASIL DISIMPAN!</h4>
+        <p id="toast-message" class="text-xs text-emerald-100 font-medium mt-0.5">Data parkir berhasil masuk ke Firebase.</p>
+      </div>
     </div>
   </div>
 
   <!-- HEADER UTAMA -->
   <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between">
-      <div class="flex items-center space-x-3.5">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-extrabold text-xl shadow-md shadow-teal-600/20">
           P
         </div>
         <div>
-          <h1 class="font-extrabold text-slate-100 text-base leading-tight tracking-tight">Parkir AFKAB</h1>
-          <p class="text-xs text-slate-400 font-medium">Dark Mode & Firebase Edition</p>
+          <h1 class="font-extrabold text-slate-100 text-sm sm:text-base leading-tight">Parkir AFKAB</h1>
+          <p class="text-[10px] sm:text-xs text-slate-400 font-medium">Dark Mode & Firebase</p>
         </div>
       </div>
 
-      <div class="flex items-center space-x-3">
-        <!-- OPSI TANGGAL (MINGGUAN) -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
         <div class="relative">
-          <select id="sheet-tab-select" onchange="changeActiveDate(this.value)" class="appearance-none bg-slate-800 border border-slate-700 text-teal-400 font-bold text-xs rounded-xl px-4 py-2.5 pr-9 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
-            <option value="TGL 25-10-2026">📅 Minggu, 25 Okt 2026</option>
-            <option value="TGL 01-11-2026">📅 Minggu, 01 Nov 2026</option>
-            <option value="TGL 08-11-2026">📅 Minggu, 08 Nov 2026</option>
-            <option value="TGL 15-11-2026">📅 Minggu, 15 Nov 2026</option>
-            <option value="TGL 22-11-2026">📅 Minggu, 22 Nov 2026</option>
-            <option value="TGL 29-11-2026">📅 Minggu, 29 Nov 2026</option>
+          <select id="sheet-tab-select" onchange="changeActiveDate(this.value)" class="appearance-none bg-slate-800 border border-slate-700 text-teal-400 font-bold text-xs rounded-xl px-3 sm:px-4 py-2.5 pr-8 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer">
+            <option value="TGL 25-10-2026">📅 25 Okt 2026</option>
+            <option value="TGL 01-11-2026">📅 01 Nov 2026</option>
+            <option value="TGL 08-11-2026">📅 08 Nov 2026</option>
+            <option value="TGL 15-11-2026">📅 15 Nov 2026</option>
+            <option value="TGL 22-11-2026">📅 22 Nov 2026</option>
+            <option value="TGL 29-11-2026">📅 29 Nov 2026</option>
           </select>
-          <i class="fa-solid fa-chevron-down absolute right-3 top-3.5 text-[10px] text-slate-400 pointer-events-none"></i>
+          <i class="fa-solid fa-chevron-down absolute right-2.5 top-3.5 text-[10px] text-slate-400 pointer-events-none"></i>
         </div>
 
-        <!-- EXPORT / IMPORT -->
-        <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm">
+        <button onclick="exportToExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition">
           <i class="fa-solid fa-file-excel"></i>
           <span class="hidden sm:inline">Export</span>
         </button>
 
-        <label class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl flex items-center gap-1.5 transition shadow-sm cursor-pointer">
+        <label class="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-3 py-2.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer">
           <i class="fa-solid fa-file-import"></i>
           <span class="hidden sm:inline">Import</span>
           <input type="file" id="import-excel-file" accept=".xlsx, .xls" onchange="importFromExcel(event)" class="hidden">
@@ -79,7 +80,7 @@
   </header>
 
   <!-- MAIN CONTAINER -->
-  <main class="max-w-7xl mx-auto px-6 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
     <!-- KOLOM KIRI (VERIFIKASI & INPUT) -->
     <div class="lg:col-span-4 space-y-6">
@@ -119,15 +120,15 @@
             <i class="fa-solid fa-circle-plus text-teal-400"></i>
             INPUT PARKIR MASUK
           </h2>
-          <span id="badge-next-id" class="text-xs font-extrabold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-1 rounded-lg">
-            No. Tiket Auto
+          <span class="text-xs font-extrabold text-teal-400 bg-teal-950 border border-teal-800 px-2.5 py-1 rounded-lg">
+            Manual / Bebas
           </span>
         </div>
 
         <form id="form-parking" onsubmit="submitParkingEntry(event)" class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-1">Nomor Tiket / Parkir</label>
-            <input type="number" id="form-id" required placeholder="Contoh: 1, 2, 10..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Nomor Tiket / Parkir (Otomatis Kosong)</label>
+            <input type="number" id="form-id" required placeholder="Ketik nomor tiket..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
           </div>
 
           <div>
@@ -282,7 +283,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
-    // KONFIGURASI FIREBASE ANDA
     const firebaseConfig = {
       apiKey: "AIzaSyCIS9fXM7g5kTBRzBCbPHTXinzmvHO2C8U",
       authDomain: "parkir-afkab.firebaseapp.com",
@@ -300,7 +300,7 @@
     let parkingData = [];
     let unsubscribeSnapshot = null;
 
-    // AUDIO NOTIFIKASI SUARA (Web Audio API)
+    // SUARA NOTIFIKASI LEBIH KERAS (GAIN VOLUME 0.6)
     function playAudioNotif(type) {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -312,45 +312,55 @@
         if (type === "SUCCESS") {
           osc.frequency.setValueAtTime(587.33, ctx.currentTime);
           osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1);
-          gain.gain.setValueAtTime(0.2, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.6, ctx.currentTime); // Lebih keras
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
           osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.3);
+          osc.stop(ctx.currentTime + 0.4);
         } else if (type === "VERIFY") {
           osc.frequency.setValueAtTime(523.25, ctx.currentTime);
           osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
           osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
-          gain.gain.setValueAtTime(0.25, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+          gain.gain.setValueAtTime(0.6, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
           osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.4);
+          osc.stop(ctx.currentTime + 0.5);
         } else if (type === "WARNING") {
           osc.type = "sawtooth";
           osc.frequency.setValueAtTime(300, ctx.currentTime);
           osc.frequency.setValueAtTime(150, ctx.currentTime + 0.15);
-          gain.gain.setValueAtTime(0.3, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.7, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
           osc.start(ctx.currentTime);
-          osc.stop(ctx.currentTime + 0.35);
+          osc.stop(ctx.currentTime + 0.4);
         }
       } catch (e) {
-        console.log("Audio not supported or blocked by browser");
+        console.log("Audio error:", e);
       }
     }
 
-    // SHOW TOAST NOTIFICATION
+    // NOTIFIKASI BESAR DI TENGAH LAYAR
     function showToast(message) {
       const toast = document.getElementById("success-toast");
+      const card = document.getElementById("toast-card");
       document.getElementById("toast-message").textContent = message;
-      toast.classList.remove("translate-y-[-200%]", "opacity-0");
-      toast.classList.add("translate-y-0", "opacity-100");
+      
+      toast.classList.remove("hidden");
+      toast.classList.add("flex");
       setTimeout(() => {
-        toast.classList.remove("translate-y-0", "opacity-100");
-        toast.classList.add("translate-y-[-200%]", "opacity-0");
-      }, 3500);
+        card.classList.remove("scale-75", "opacity-0");
+        card.classList.add("scale-100", "opacity-100");
+      }, 10);
+
+      setTimeout(() => {
+        card.classList.remove("scale-100", "opacity-100");
+        card.classList.add("scale-75", "opacity-0");
+        setTimeout(() => {
+          toast.classList.remove("flex");
+          toast.classList.add("hidden");
+        }, 300);
+      }, 2500);
     }
 
-    // CONNECT LISTENER BERDASARKAN TANGGAL AKTIF
     window.changeActiveDate = function(dateKey) {
       currentSelectedDate = dateKey;
       const selectEl = document.getElementById("sheet-tab-select");
@@ -369,17 +379,11 @@
         });
 
         parkingData.sort((a, b) => Number(a.id) - Number(b.id));
-        updateNextTicketId();
         applyFilters();
         updateDashboardStats();
       }, (error) => {
         console.error("Firebase error:", error);
       });
-    }
-
-    function updateNextTicketId() {
-      const maxId = parkingData.reduce((max, item) => Number(item.id) > max ? Number(item.id) : max, 0);
-      document.getElementById("form-id").value = maxId + 1;
     }
 
     function updateDashboardStats() {
@@ -406,7 +410,7 @@
       document.getElementById("stat-total-revenue").textContent = "Rp " + grandTotal.toLocaleString("id-ID");
     }
 
-    // SIMPAN DATA PARKIR (FORM OTOMATIS KOSONG SETELAH INPUT)
+    // SIMPAN DATA PARKIR (FORM OTOMATIS KOSONG TERMASUK NO TIKET)
     window.submitParkingEntry = async function(e) {
       e.preventDefault();
       const idVal = Number(document.getElementById("form-id").value);
@@ -436,21 +440,20 @@
 
       try {
         await setDoc(doc(db, currentSelectedDate, String(idVal)), entry);
-        playAudioNotif("SUCCESS"); // 🔊 Suara Berhasil
-        showToast(`Tiket #${idVal} berhasil disimpan!`); // 🔔 Notifikasi Sukses
+        playAudioNotif("SUCCESS"); // 🔊 Suara Lebih Keras
+        showToast(`Tiket #${idVal} Berhasil Disimpan!`); // 🔔 Notifikasi Besar di Tengah
 
-        // KOSONGKAN FORM INPUT KECUALI PREFIX PLAT 'AG' DAN AUTO INCREMENT ID
+        // KOSONGKAN SELURUH FORM INPUT (NOMOR TIKET IKUT DIKOSONGKAN)
+        document.getElementById("form-id").value = "";
         document.getElementById("form-plate-num").value = "";
         document.getElementById("form-plate-back").value = "";
         document.getElementById("form-person").value = "";
         document.getElementById("form-helmet").value = "";
-        updateNextTicketId();
       } catch (err) {
         alert("Gagal simpan ke Firebase: " + err.message);
       }
     };
 
-    // UPDATE STATUS KELUAR
     window.updateExitStatus = async function(id, newStatus) {
       try {
         await updateDoc(doc(db, currentSelectedDate, String(id)), { exitStatus: newStatus });
@@ -467,7 +470,6 @@
       }
     };
 
-    // EXPORT KE EXCEL
     window.exportToExcel = function() {
       if (parkingData.length === 0) {
         alert("Belum ada data parkir untuk tanggal ini!");
@@ -490,7 +492,6 @@
       XLSX.writeFile(workbook, `Parkir_AFKAB_${currentSelectedDate}.xlsx`);
     };
 
-    // IMPORT DARI EXCEL
     window.importFromExcel = function(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -521,7 +522,7 @@
               });
             }
           }
-          showToast("Data Excel berhasil di-import ke Firebase!");
+          showToast("Data Excel Berhasil Di-import!");
         } catch (err) {
           alert("Gagal membaca file Excel: " + err.message);
         }
@@ -656,7 +657,6 @@
       `;
     };
 
-    // INISIALISASI PERTAMA KALI
     setupRealtimeListener();
   </script>
 </body>
