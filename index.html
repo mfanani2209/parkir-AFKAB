@@ -2,7 +2,6 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <!-- ANTI-ZOOM DI MOBILE -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Parkir AFKAB</title>
 
@@ -80,22 +79,24 @@
             <i class="fa-solid fa-magnifying-glass text-teal-400"></i>
             VERIFIKASI KELUAR
           </h2>
-          <span class="text-[10px] font-extrabold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full">Fast Search</span>
+          <span class="text-[10px] font-extrabold text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full">Auto Search</span>
         </div>
 
         <div class="space-y-3">
-          <label class="block text-xs font-semibold text-slate-400">Masukkan Nomor Parkir:</label>
+          <label class="block text-xs font-semibold text-slate-400">Masukkan Nomor Parkir (Cari Keluar):</label>
           <div class="relative flex items-center">
-            <input type="number" id="verify-id-input" oninput="handleVerificationSearch()" placeholder="Ketik angka tiket..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
+            <!-- INPUT SEARCH VERIFIKASI KELUAR -->
+            <input type="number" id="verify-id-input" inputmode="numeric" oninput="handleVerificationSearch()" placeholder="Ketik nomor tiket..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
             <button onclick="resetVerification()" class="absolute right-2 text-xs font-bold text-slate-400 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg transition">
               Reset
             </button>
           </div>
 
+          <!-- CONTAINER HASIL PENCARIAN VERIFIKASI -->
           <div id="verification-result-box" class="mt-4 bg-slate-950/60 border border-slate-800 rounded-2xl p-5 min-h-[200px] flex items-center justify-center">
             <div class="text-center text-slate-600 space-y-2">
               <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
-              <p class="text-xs font-medium">Ketik nomor parkir untuk memeriksa data kendaraan.</p>
+              <p class="text-xs font-medium">Ketik nomor parkir untuk mencari dan memverifikasi kendaraan keluar.</p>
             </div>
           </div>
         </div>
@@ -130,7 +131,6 @@
             <label class="block text-xs font-semibold text-slate-400 mb-1">Plat Nomor</label>
             <div class="grid grid-cols-3 gap-2">
               <input type="text" id="form-plate-front" value="AG" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500">
-              <!-- PLAT TENGAH MENGGUNAKAN KEYBOARD ANGKA (inputmode="numeric") -->
               <input type="text" id="form-plate-num" inputmode="numeric" pattern="[0-9]*" placeholder="XXXX" required class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
               <input type="text" id="form-plate-back" placeholder="YY" class="bg-slate-950 border border-slate-800 rounded-xl px-2 py-2.5 text-sm text-center font-bold text-slate-100 uppercase focus:outline-none focus:ring-2 focus:ring-teal-500 placeholder:text-slate-600">
             </div>
@@ -283,14 +283,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // TANGGAL OTOMATIS HARI INI (Format YYYY-MM-DD untuk nama koleksi Firestore)
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const currentSelectedDate = `TGL_${year}-${month}-${day}`;
 
-    // Tampilkan format tanggal cantik di badge header
     const optionsDate = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
     document.getElementById("active-date-badge").textContent = today.toLocaleDateString('id-ID', optionsDate);
 
@@ -369,6 +367,10 @@
         parkingData.sort((a, b) => Number(a.id) - Number(b.id));
         applyFilters();
         updateDashboardStats();
+
+        // Update pencarian verifikasi jika sedang mengetik
+        const currentSearchId = document.getElementById("verify-id-input").value;
+        if (currentSearchId) handleVerificationSearch();
       }, (error) => {
         console.error("Firebase error:", error);
       });
@@ -610,13 +612,19 @@
       }).join('');
     }
 
+    // PENCARIAN OTOMATIS VERIFIKASI KELUAR
     window.handleVerificationSearch = function() {
       const searchId = document.getElementById("verify-id-input").value;
-      if (!searchId) { resetVerification(); return; }
+      const resultBox = document.getElementById("verification-result-box");
 
-      const item = parkingData.find(d => d.id == searchId);
+      if (!searchId) {
+        resetVerification();
+        return;
+      }
+
+      const item = parkingData.find(d => Number(d.id) === Number(searchId));
       if (!item) {
-        document.getElementById("verification-result-box").innerHTML = `
+        resultBox.innerHTML = `
           <div class="text-center text-rose-400 space-y-1">
             <i class="fa-solid fa-circle-exclamation text-2xl"></i>
             <p class="text-xs font-bold">Data Tiket #${searchId} Tidak Ditemukan!</p>
@@ -624,6 +632,7 @@
         `;
         return;
       }
+
       renderVerificationCard(item);
     };
 
@@ -684,7 +693,7 @@
       document.getElementById("verification-result-box").innerHTML = `
         <div class="text-center text-slate-600 space-y-2">
           <i class="fa-solid fa-ticket text-4xl opacity-20"></i>
-          <p class="text-xs font-medium">Ketik nomor parkir untuk memeriksa data kendaraan.</p>
+          <p class="text-xs font-medium">Ketik nomor parkir untuk mencari dan memverifikasi kendaraan keluar.</p>
         </div>
       `;
     };
